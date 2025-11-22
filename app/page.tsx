@@ -348,7 +348,7 @@ export default function LandingPage() {
       {/* Results View (Conditionally Rendered) - Styled to match Hushed Light Section */}
       <AnimatePresence>
         {result && !isPending && (
-            <section id="results" className="w-full bg-white py-24 text-brand-primary">
+            <section id="results" className="w-full bg-[#Fdf8f6] py-24 text-brand-primary">
                 <div className="max-w-6xl mx-auto px-6">
                     <motion.div 
                         initial={{ opacity: 0, y: 40 }}
@@ -360,7 +360,7 @@ export default function LandingPage() {
                                 <h2 className="text-4xl font-serif font-bold text-brand-primary">Visibility Report</h2>
                                 <p className="text-lg text-brand-primary/60 mt-2 font-medium">{result.url}</p>
                             </div>
-                            <Button onClick={() => setResult(null)} variant="outline" className="rounded-full border-2 border-brand-primary/20 font-bold hover:bg-brand-primary/5 text-brand-primary">
+                            <Button onClick={() => setResult(null)} variant="outline" className="rounded-full border-2 border-brand-primary/50 font-bold hover:bg-brand-primary/5 text-brand-primary">
                                 Start New Audit
                             </Button>
                         </div>
