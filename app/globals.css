@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    /* 
+       New Palette based on Hushed V2 Request
+       Background (Hero): #551121
+       Secondary Section: #6B1D2F
+       Light Section: #F6D6CA
+       
+       Logo Colors (Still used for accents):
+       - Yellow: #F3B62E -> #F2D580 (Softer version from screenshot)
+       - Red/Orange: #DA4A30 -> #D97C54 (Terra cotta from screenshot)
+       - Teal: #2B6B6E -> #A8D0D0 (Light teal from screenshot)
+       - Green: #3E6348 -> Keep as deep green for contrast
+    */
+
+    /* Background: Deep Red/Burgundy (#551121) - Default app background */
+    --background: 346 67% 20%; 
+    
+    /* Foreground: Off-White/Peach for text on dark background */
+    --foreground: 16 42% 88%; /* #F6D6CA approx */
+ 
+    /* Card: White */
+    --card: 0 0% 100%;
+    --card-foreground: 346 67% 20%;
+ 
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 346 67% 20%;
+ 
+    /* Primary: Deep Red (#551121) - Used for text on light backgrounds */
+    --primary: 346 67% 20%; 
+    --primary-foreground: 16 42% 88%;
+ 
+    /* Secondary: Light Teal (#A8D0D0) */
+    --secondary: 180 32% 74%;
+    --secondary-foreground: 346 67% 20%;
+ 
+    /* Muted: Soft Peach (#F6D6CA) */
+    --muted: 16 67% 88%;
+    --muted-foreground: 346 40% 40%;
+ 
+    /* Accent: Terra Cotta Orange (#D97C54) */
+    --accent: 18 62% 59%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Warning/Highlight: Soft Yellow (#F2D580) */
+    --warning: 45 82% 73%;
+    --warning-foreground: 346 67% 20%;
+    
+    /* Success/Green: Deep Green */
+    --success: 136 23% 32%;
+    --success-foreground: 0 0% 100%;
+ 
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    /* Border */
+    --border: 16 42% 80%;
+    --input: 16 42% 80%;
+    --ring: 18 62% 59%; /* Match Accent */
+ 
+    --radius: 1rem; 
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
