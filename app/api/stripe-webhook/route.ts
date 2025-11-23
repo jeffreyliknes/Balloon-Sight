@@ -8,7 +8,8 @@ import { analyzeHtml } from "@/actions/analyze-url";
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = (await headers()).get("stripe-signature") as string;
+  const headersList = await headers();
+  const signature = headersList.get("stripe-signature") as string;
 
   let event;
 
