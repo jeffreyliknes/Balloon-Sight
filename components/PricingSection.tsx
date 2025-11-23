@@ -63,7 +63,7 @@ export function PricingSection() {
             </div>
             <div className="mb-6">
               <h3 className="text-xl font-bold font-serif mb-2 text-secondary">Professional</h3>
-              <div className="text-4xl font-black">$29</div>
+              <div className="text-4xl font-black">C$12</div>
               <p className="text-sm opacity-70 font-medium mt-2">One-time payment</p>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
