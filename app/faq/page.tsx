@@ -7,24 +7,32 @@ import { motion } from "framer-motion";
 
 const faqs = [
   {
-    q: "What does Balloon Sight do?",
-    a: "It analyzes your website for AI visibility and creates a full report with recommendations."
+    q: "What is AI visibility?",
+    a: "AI visibility measures how likely your site is to appear in AI search results (ChatGPT, Perplexity, Gemini, Claude). Unlike traditional SEO, AI models read summaries, not keyword rankings. Your schema, persona clarity, and technical signals determine if you get cited."
+  },
+  {
+    q: "How is this different from SEO?",
+    a: "Traditional SEO optimizes for Google's algorithm. AI visibility optimizes for how AI models understand and cite your site. AI doesn't crawl pages like search engines—it reads summaries. Schema, persona, and niche positioning matter more than keywords."
   },
   {
     q: "Do I need to pay to scan my website?",
-    a: "The initial scan is free. You only pay if you want the full PDF report with detailed breakdowns."
-  },
-  {
-    q: "What formats can I download?",
-    a: "Right now we offer a downloadable branded PDF report. More formats will be added soon."
+    a: "No. The initial scan is free. You get your AI Visibility Score (0-100) and persona analysis instantly. Pay C$12 only if you want the full PDF report with detailed breakdowns, prioritized fixes, and actionable recommendations."
   },
   {
     q: "How long does the report take?",
-    a: "Usually between 10–60 seconds after checkout. It is emailed directly to you."
+    a: "The free scan takes ~30 seconds. The full PDF report is generated and emailed to you within 10–60 seconds after payment. No waiting, no delays."
   },
   {
     q: "Do you store my website data?",
-    a: "We temporarily process scan results to generate the report, but we do not permanently store your data unless required for future features."
+    a: "We temporarily process scan results to generate your report, but we do not permanently store your website data. Your privacy matters. We only keep what's necessary for report delivery."
+  },
+  {
+    q: "What if my score is low?",
+    a: "Low scores are fixable. Our report prioritizes fixes by business impact. Start with schema, then persona clarity, then crawlability. Most sites see improvements within days of implementing our recommendations."
+  },
+  {
+    q: "Can I scan multiple sites?",
+    a: "Yes. Each scan is C$12. Scan as many sites as you need. No subscription, no limits. Pay per insight."
   }
 ];
 

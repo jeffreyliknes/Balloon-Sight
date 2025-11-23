@@ -19,8 +19,8 @@ export function Navbar() {
         
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 font-bold text-white/90">
-          <Link href="/#features" className="hover:text-accent transition-colors">Why It Matters</Link>
-          <Link href="/#pricing" className="hover:text-accent transition-colors">Plans</Link>
+          <Link href="/#examples" className="hover:text-accent transition-colors">Examples</Link>
+          <Link href="/#pricing" className="hover:text-accent transition-colors">Pricing</Link>
           <Link href="/faq" className="hover:text-accent transition-colors">FAQ</Link>
           <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
           <Button 
@@ -28,7 +28,7 @@ export function Navbar() {
             variant="default" 
             className="bg-accent text-white hover:bg-accent/90 rounded-lg px-6 h-10 shadow-lg font-serif"
           >
-            Start Analysis
+            Scan your site now
           </Button>
         </div>
 
@@ -48,8 +48,8 @@ export function Navbar() {
                 className="md:hidden bg-[#551121] absolute top-full left-0 w-full border-t border-white/10 overflow-hidden shadow-xl"
             >
                 <div className="flex flex-col p-6 space-y-6 font-bold text-white text-center">
-                    <Link href="/#features" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Why It Matters</Link>
-                    <Link href="/#pricing" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Plans</Link>
+                    <Link href="/#examples" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Examples</Link>
+                    <Link href="/#pricing" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Pricing</Link>
                     <Link href="/faq" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">FAQ</Link>
                     <Link href="/contact" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Contact</Link>
                     <Button 
@@ -59,7 +59,7 @@ export function Navbar() {
                         }}
                         className="bg-accent text-white w-full mt-4"
                     >
-                        Start Analysis
+                        Scan your site now
                     </Button>
                 </div>
             </motion.div>

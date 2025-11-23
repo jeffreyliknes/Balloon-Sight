@@ -11,7 +11,10 @@ export function Footer() {
                 BalloonSight
               </div>
               <p className="text-white/70 max-w-md leading-relaxed text-lg">
-                  Optimize your digital footprint for the new era of AI-powered search.
+                  Be the site that AI chooses to remember. Scan your site, get your score, unlock your visibility.
+              </p>
+              <p className="text-white/60 text-sm mt-4">
+                  Questions? Email us at <a href="mailto:jeff.liknes@gmail.com" className="text-accent hover:text-accent/80 underline">jeff.liknes@gmail.com</a>
               </p>
           </div>
           <div>
@@ -30,6 +33,10 @@ export function Footer() {
           </div>
       </div>
       <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/10 text-center text-white/40 text-sm">
+          <div className="mb-4">
+              <a href="/privacy" className="hover:text-white/60 mx-4">Privacy Policy</a>
+              <a href="/terms" className="hover:text-white/60 mx-4">Terms of Service</a>
+          </div>
           © {new Date().getFullYear()} BalloonSight Inc. All rights reserved.
       </div>
     </footer>
