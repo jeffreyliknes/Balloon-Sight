@@ -6,15 +6,11 @@ export function Footer() {
     <footer className="w-full bg-brand-primary text-white py-12 md:py-24 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-3 font-serif font-bold text-2xl tracking-tight mb-6 text-white">
-                <BalloonSightLogo size={40} />
-                BalloonSight
+              <div className="flex items-center gap-3 mb-6">
+                <BalloonSightLogo size={80} />
               </div>
               <p className="text-white/70 max-w-md leading-relaxed text-lg">
                   Be the site that AI chooses to remember. Scan your site, get your score, unlock your visibility.
-              </p>
-              <p className="text-white/60 text-sm mt-4">
-                  Questions? Email us at <a href="mailto:jeff.liknes@gmail.com" className="text-accent hover:text-accent/80 underline">jeff.liknes@gmail.com</a>
               </p>
           </div>
           <div>
@@ -34,8 +30,8 @@ export function Footer() {
       </div>
       <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/10 text-center text-white/40 text-sm">
           <div className="mb-4">
-              <a href="/privacy" className="hover:text-white/60 mx-4">Privacy Policy</a>
-              <a href="/terms" className="hover:text-white/60 mx-4">Terms of Service</a>
+              <Link href="/privacy" className="hover:text-white/60 mx-4">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white/60 mx-4">Terms of Service</Link>
           </div>
           © {new Date().getFullYear()} BalloonSight Inc. All rights reserved.
       </div>
