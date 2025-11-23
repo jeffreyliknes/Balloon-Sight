@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { generateReportHtml, generatePdf } from "@/lib/report-generator";
-import { sendReportEmail } from "@/lib/email";
+import { generatePdf } from "@/lib/pdf";
+import { generateFullReport } from "@/lib/reportTemplate";
+import { sendReport } from "@/lib/sendReport";
 import { analyzeHtml } from "@/actions/analyze-url";
 
 export async function POST(req: Request) {
@@ -23,38 +24,39 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
-    const domain = session.client_reference_id;
     const email = session.customer_details?.email || session.customer_email;
+    // Use client_reference_id as the domain carrier for Payment Links
+    const domain = session.client_reference_id || session.metadata?.domain;
+
+    console.log("💰 Payment received from:", email, "for domain:", domain);
 
     if (domain && email) {
-      console.log(`Processing report for ${domain} to ${email}`);
-
-      // 1. Scrape the domain
-      // We need to fetch it here. We can't call our own /api/scrape easily, so we fetch directly.
       try {
-        const scrapeRes = await fetch(domain, {
+        // 1. Run Full Analysis
+        // Fetch HTML content first
+        const res = await fetch(domain.startsWith('http') ? domain : `https://${domain}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BalloonSight/1.0)' }
         });
-        const html = await scrapeRes.text();
+        const htmlContent = await res.text();
         
-        // 2. Analyze
-        // We mock responseTime as 100ms since we are async processing
-        const analysis = await analyzeHtml(html, domain, 100);
+        // Analyze
+        const results = await analyzeHtml(htmlContent, domain, 100); // 100ms mocked response time
 
-        // 3. Generate PDF
-        const reportHtml = generateReportHtml(domain, analysis);
-        const pdfBuffer = await generatePdf(reportHtml);
+        // 2. Generate Report
+        const html = generateFullReport(domain, results);
+        const pdf = await generatePdf(html);
 
-        // 4. Send Email
-        await sendReportEmail(email, domain, pdfBuffer);
+        // 3. Send Email
+        await sendReport(email, pdf);
 
+        console.log("📎 Report sent:", email);
       } catch (err) {
-        console.error("Failed to generate/send report:", err);
-        // We don't fail the webhook response, just log it.
+        console.error("Failed to process report:", err);
       }
+    } else {
+        console.error("Missing domain or email in session");
     }
   }
 
-  return new NextResponse(null, { status: 200 });
+  return NextResponse.json({ received: true });
 }
-

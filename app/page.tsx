@@ -421,7 +421,7 @@ export default function LandingPage() {
                                 onClick={() => window.location.href = `https://buy.stripe.com/eVq00j2At4qp2mB3uE0oM00?client_reference_id=${encodeURIComponent(result.url)}`}
                                 className="h-16 px-10 rounded-full bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
-                                Download Full Report — $12
+                                Download Full AI Visibility Report — $12
                             </Button>
                             <p className="mt-4 text-sm text-brand-primary/50 font-bold uppercase tracking-widest">One-time payment • Money-back guarantee</p>
                         </div>
