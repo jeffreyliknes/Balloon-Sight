@@ -1,20 +1,28 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BalloonSightLogo } from "@/components/BalloonSightLogo";
+import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <nav className="w-full bg-brand-primary relative z-10">
+    <nav className="w-full bg-brand-primary relative z-50">
       <div className="w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto py-6">
-        <div className="flex items-center gap-3 font-serif font-black text-3xl tracking-tight text-white">
+        <Link href="/" className="flex items-center gap-3 font-serif font-black text-3xl tracking-tight text-white z-50">
              <BalloonSightLogo size={200} />
-        </div>
+        </Link>
+        
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 font-bold text-white/90">
-          <a href="/#features" className="hover:text-accent transition-colors">Why It Matters</a>
-          <a href="/#pricing" className="hover:text-accent transition-colors">Plans</a>
-          <a href="/faq" className="hover:text-accent transition-colors">FAQ</a>
-          <a href="/contact" className="hover:text-accent transition-colors">Contact</a>
+          <Link href="/#features" className="hover:text-accent transition-colors">Why It Matters</Link>
+          <Link href="/#pricing" className="hover:text-accent transition-colors">Plans</Link>
+          <Link href="/faq" className="hover:text-accent transition-colors">FAQ</Link>
+          <Link href="/contact" className="hover:text-accent transition-colors">Contact</Link>
           <Button 
             onClick={() => window.location.href = '/'}
             variant="default" 
@@ -23,8 +31,40 @@ export function Navbar() {
             Start Analysis
           </Button>
         </div>
+
+        {/* Mobile Menu Toggle */}
+        <button className="md:hidden text-white z-50 relative" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
+            <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden bg-[#551121] absolute top-full left-0 w-full border-t border-white/10 overflow-hidden shadow-xl"
+            >
+                <div className="flex flex-col p-6 space-y-6 font-bold text-white text-center">
+                    <Link href="/#features" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Why It Matters</Link>
+                    <Link href="/#pricing" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Plans</Link>
+                    <Link href="/faq" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">FAQ</Link>
+                    <Link href="/contact" onClick={() => setIsOpen(false)} className="py-2 border-b border-white/5">Contact</Link>
+                    <Button 
+                        onClick={() => {
+                            window.location.href = '/';
+                            setIsOpen(false);
+                        }}
+                        className="bg-accent text-white w-full mt-4"
+                    >
+                        Start Analysis
+                    </Button>
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
-

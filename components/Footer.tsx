@@ -1,5 +1,4 @@
-"use client";
-
+import Link from "next/link";
 import { BalloonSightLogo } from "@/components/BalloonSightLogo";
 
 export function Footer() {
@@ -18,15 +17,15 @@ export function Footer() {
           <div>
               <h4 className="font-bold text-lg mb-6 text-accent">Product</h4>
               <ul className="space-y-4 text-white/80 font-medium">
-                  <li><a href="/#features" className="hover:text-white hover:underline">How It Works</a></li>
-                  <li><a href="/#pricing" className="hover:text-white hover:underline">Pricing</a></li>
-                  <li><a href="/faq" className="hover:text-white hover:underline">FAQ</a></li>
+                  <li><Link href="/#features" className="hover:text-white hover:underline">How It Works</Link></li>
+                  <li><Link href="/#pricing" className="hover:text-white hover:underline">Pricing</Link></li>
+                  <li><Link href="/faq" className="hover:text-white hover:underline">FAQ</Link></li>
               </ul>
           </div>
           <div>
               <h4 className="font-bold text-lg mb-6 text-accent">Company</h4>
               <ul className="space-y-4 text-white/80 font-medium">
-                  <li><a href="/contact" className="hover:text-white hover:underline">Contact</a></li>
+                  <li><Link href="/contact" className="hover:text-white hover:underline">Contact</Link></li>
               </ul>
           </div>
       </div>
@@ -36,4 +35,3 @@ export function Footer() {
     </footer>
   );
 }
-
