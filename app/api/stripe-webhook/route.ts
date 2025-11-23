@@ -34,14 +34,25 @@ export async function POST(req: Request) {
     if (domain && email) {
       try {
         // 1. Run Full Analysis (Deep Scan)
-        // Fetch content
-        const res = await fetch(domain.startsWith('http') ? domain : `https://${domain}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BalloonSight/1.0)' }
-        });
-        const htmlContent = await res.text();
+        // Use /api/scrape endpoint for consistent fetching
+        const domainUrl = domain.startsWith('http') ? domain : `https://${domain}`;
+        // Construct the full URL for the internal API call
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                       'http://localhost:3000';
+        const scrapeUrl = `${baseUrl}/api/scrape?url=${encodeURIComponent(domainUrl)}`;
+        
+        const scrapeRes = await fetch(scrapeUrl);
+        if (!scrapeRes.ok) {
+          const errorData = await scrapeRes.json().catch(() => ({ error: scrapeRes.statusText }));
+          throw new Error(`Failed to fetch from /api/scrape: ${errorData.error || scrapeRes.statusText}`);
+        }
+        const scrapeData = await scrapeRes.json();
+        const htmlContent = scrapeData.html;
+        const responseTime = scrapeData.time || 0;
         
         // Analyze
-        const results = await analyzeHtml(htmlContent, domain, 100); 
+        const results = await analyzeHtml(htmlContent, domain, responseTime); 
 
         // 2. Generate Report
         const html = generateFullReport(domain, results);

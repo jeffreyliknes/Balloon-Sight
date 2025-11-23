@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { analyzeHtml } from "@/actions/analyze-url";
 import { AnalysisResult } from "@/lib/types";
 import { ScoreGauge } from "@/components/ScoreGauge";
-import { AnalysisCard } from "@/components/AnalysisCard";
 import { PricingSection } from "@/components/PricingSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -347,7 +346,7 @@ export default function LandingPage() {
                             </Button>
                         </div>
 
-                        {/* Scores & Persona */}
+                        {/* Scores & Persona - Free Preview */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <Card className="col-span-1 border-2 border-brand-primary/5 shadow-none rounded-[24px] flex flex-col items-center justify-center p-8 bg-[#F6D6CA]">
                                 <ScoreGauge score={result.score} />
@@ -367,36 +366,19 @@ export default function LandingPage() {
                             </Card>
                         </div>
 
-                        {/* Detail Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <AnalysisCard 
-                                title="Crawlability & Access" 
-                                category={result.categories.accessibility} 
-                                icon={<Eye className="w-6 h-6 text-brand-primary" />}
-                            />
-                            <AnalysisCard 
-                                title="Structured Data Schema" 
-                                category={result.categories.structuredData} 
-                                icon={<Database className="w-6 h-6 text-brand-primary" />}
-                            />
-                            <AnalysisCard 
-                                title="Semantic HTML Structure" 
-                                category={result.categories.semanticStructure} 
-                                icon={<Layout className="w-6 h-6 text-brand-primary" />}
-                            />
-                            <AnalysisCard 
-                                title="Content Signals" 
-                                category={result.categories.contentPersona} 
-                                icon={<FileText className="w-6 h-6 text-brand-primary" />}
-                            />
+                        {/* Free Preview Notice */}
+                        <div className="bg-brand-primary/5 p-6 rounded-2xl border-2 border-brand-primary/10 text-center">
+                            <p className="text-lg text-brand-primary/80 font-medium mb-2">
+                                This is your free preview. Get the complete breakdown with detailed category analysis, prioritized fixes, and actionable recommendations in your full PDF report.
+                            </p>
                         </div>
 
-                        {/* NEW CTA SECTION */}
+                        {/* CTA SECTION */}
                         <div className="mt-12 bg-brand-primary/5 p-10 rounded-[32px] border-2 border-brand-primary/10 text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary via-warning to-accent" />
-                            <h3 className="text-3xl font-serif font-bold text-brand-primary mb-4">Want the complete picture?</h3>
+                            <h3 className="text-3xl font-serif font-bold text-brand-primary mb-4">Unlock the Full Analysis</h3>
                             <p className="text-lg text-brand-primary/70 mb-8 max-w-2xl mx-auto font-medium">
-                                Get a deep-dive PDF report with competitor analysis, detailed schema validation, and a prioritized fix list sent straight to your inbox.
+                                Get your complete AI Visibility Report with detailed breakdowns for all 4 categories (Crawlability, Structured Data, Semantic Structure, Content Signals), prioritized fix recommendations, and actionable insights—delivered as a professional PDF to your inbox.
                             </p>
                             <Button 
                                 onClick={() => window.location.href = `https://buy.stripe.com/eVq00j2At4qp2mB3uE0oM00?client_reference_id=${encodeURIComponent(result.url)}`}
