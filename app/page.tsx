@@ -409,6 +409,23 @@ export default function LandingPage() {
                                 icon={<FileText className="w-6 h-6 text-brand-primary" />}
                             />
                         </div>
+
+                        {/* NEW CTA SECTION */}
+                        <div className="mt-12 bg-brand-primary/5 p-10 rounded-[32px] border-2 border-brand-primary/10 text-center relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary via-warning to-accent" />
+                            <h3 className="text-3xl font-serif font-bold text-brand-primary mb-4">Want the complete picture?</h3>
+                            <p className="text-lg text-brand-primary/70 mb-8 max-w-2xl mx-auto font-medium">
+                                Get a deep-dive PDF report with competitor analysis, detailed schema validation, and a prioritized fix list sent straight to your inbox.
+                            </p>
+                            <Button 
+                                onClick={() => window.location.href = `https://buy.stripe.com/eVq00j2At4qp2mB3uE0oM00?client_reference_id=${encodeURIComponent(result.url)}`}
+                                className="h-16 px-10 rounded-full bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                            >
+                                Download Full Report — $12
+                            </Button>
+                            <p className="mt-4 text-sm text-brand-primary/50 font-bold uppercase tracking-widest">One-time payment • Money-back guarantee</p>
+                        </div>
+
                     </motion.div>
                 </div>
             </section>
