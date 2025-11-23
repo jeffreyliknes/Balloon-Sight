@@ -274,7 +274,7 @@ function FeaturesGrid() {
 }
 
 // --- Main Page Component ---
-
+// Updated with FAQ/Contact links
 export default function LandingPage() {
   const [url, setUrl] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
