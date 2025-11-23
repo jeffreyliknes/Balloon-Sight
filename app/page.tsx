@@ -27,6 +27,8 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-8 font-bold text-white/90">
           <a href="#features" className="hover:text-accent transition-colors">Why It Matters</a>
           <a href="#pricing" className="hover:text-accent transition-colors">Plans</a>
+          <a href="/faq" className="hover:text-accent transition-colors">FAQ</a>
+          <a href="/contact" className="hover:text-accent transition-colors">Contact</a>
           <Button variant="default" className="bg-accent text-white hover:bg-accent/90 rounded-lg px-6 h-10 shadow-lg font-serif">
             Start Analysis
           </Button>
