@@ -5,6 +5,7 @@ import { analyzeHtml } from "@/actions/analyze-url";
 import { AnalysisResult } from "@/lib/types";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { AnalysisCard } from "@/components/AnalysisCard";
+import { PricingSection } from "@/components/PricingSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -418,6 +419,8 @@ export default function LandingPage() {
       
       <FeaturesGrid />
 
+      <PricingSection />
+
       {/* Footer */}
       <footer className="w-full bg-brand-primary text-white py-12 md:py-24 border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
@@ -434,7 +437,7 @@ export default function LandingPage() {
                   <h4 className="font-bold text-lg mb-6 text-accent">Product</h4>
                   <ul className="space-y-4 text-white/80 font-medium">
                       <li><a href="#" className="hover:text-white hover:underline">How It Works</a></li>
-                      <li><a href="#" className="hover:text-white hover:underline">Pricing</a></li>
+                      <li><a href="#pricing" className="hover:text-white hover:underline">Pricing</a></li>
                       <li><a href="#" className="hover:text-white hover:underline">API Docs</a></li>
                   </ul>
               </div>
