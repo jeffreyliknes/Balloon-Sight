@@ -2,8 +2,8 @@ import puppeteer from "puppeteer";
 
 export async function generatePdf(html: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
-    headless: true, // "new" is deprecated/default now
-    args: ['--no-sandbox', '--disable-setuid-sandbox'] // Vital for some environments
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: "networkidle0" });
@@ -17,4 +17,3 @@ export async function generatePdf(html: string): Promise<Buffer> {
   await browser.close();
   return Buffer.from(pdf);
 }
-

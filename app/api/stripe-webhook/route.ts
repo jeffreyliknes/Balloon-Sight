@@ -25,22 +25,22 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
     const email = session.customer_details?.email || session.customer_email;
-    // Use client_reference_id as the domain carrier for Payment Links
+    // Support both client_reference_id (Payment Links) and metadata.domain (Checkout API)
     const domain = session.client_reference_id || session.metadata?.domain;
 
-    console.log("💰 Payment received from:", email, "for domain:", domain);
+    console.log("✔ Payment received from", email, "for domain:", domain);
 
     if (domain && email) {
       try {
-        // 1. Run Full Analysis
-        // Fetch HTML content first
+        // 1. Run Full Analysis (Deep Scan)
+        // Fetch content
         const res = await fetch(domain.startsWith('http') ? domain : `https://${domain}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BalloonSight/1.0)' }
         });
         const htmlContent = await res.text();
         
         // Analyze
-        const results = await analyzeHtml(htmlContent, domain, 100); // 100ms mocked response time
+        const results = await analyzeHtml(htmlContent, domain, 100); 
 
         // 2. Generate Report
         const html = generateFullReport(domain, results);
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         // 3. Send Email
         await sendReport(email, pdf);
 
-        console.log("📎 Report sent:", email);
+        console.log("📤 PDF sent to", email);
       } catch (err) {
         console.error("Failed to process report:", err);
       }
