@@ -1,14 +1,26 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error("Missing RESEND_API_KEY. Please set it in your environment variables.");
+    }
+    resendInstance = new Resend(apiKey);
+  }
+  return resendInstance;
+}
 
 export async function sendReport(email: string, pdf: Buffer) {
   if (!process.env.RESEND_API_KEY) {
     console.error("Missing RESEND_API_KEY");
-    return;
+    throw new Error("RESEND_API_KEY is required to send reports.");
   }
 
   try {
+    const resend = getResend();
     await resend.emails.send({
       from: `Balloon Sight <${process.env.REPORT_SENDER_EMAIL || 'reports@balloonsight.com'}>`,
       to: email,
