@@ -15,7 +15,7 @@ export async function generatePdf(html: string): Promise<Buffer> {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless === "new" ? true : chromium.headless, // Handle type mismatch if any
+      headless: chromium.headless,
     });
   } else {
     // Local development fallback
