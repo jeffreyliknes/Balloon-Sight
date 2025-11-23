@@ -12,31 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Database, Layout, FileText, Sparkles, AlertCircle, ArrowRight, Loader2, Map, Compass, Check, ShieldCheck, TrendingUp, Globe, Smartphone, MessageSquare, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BalloonSightLogo } from "@/components/BalloonSightLogo";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 // --- Components ---
-
-function Navbar() {
-  return (
-    <nav className="w-full bg-brand-primary relative z-10">
-      <div className="w-full px-6 md:px-12 flex items-center justify-between max-w-7xl mx-auto py-6">
-        <div className="flex items-center gap-3 font-serif font-black text-3xl tracking-tight text-white">
-            {/* Removed background and text, increased size */}
-             <BalloonSightLogo size={200} />
-        </div>
-        <div className="hidden md:flex items-center gap-8 font-bold text-white/90">
-          <a href="#features" className="hover:text-accent transition-colors">Why It Matters</a>
-          <a href="#pricing" className="hover:text-accent transition-colors">Plans</a>
-          <a href="/faq" className="hover:text-accent transition-colors">FAQ</a>
-          <a href="/contact" className="hover:text-accent transition-colors">Contact</a>
-          <Button variant="default" className="bg-accent text-white hover:bg-accent/90 rounded-lg px-6 h-10 shadow-lg font-serif">
-            Start Analysis
-          </Button>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 function HeroSection({ 
     url, 
@@ -440,39 +419,7 @@ export default function LandingPage() {
 
       <PricingSection />
 
-      {/* Footer */}
-      <footer className="w-full bg-brand-primary text-white py-12 md:py-24 border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-              <div className="col-span-1 md:col-span-2">
-                  <div className="flex items-center gap-3 font-serif font-bold text-2xl tracking-tight mb-6 text-white">
-                    <BalloonSightLogo size={40} />
-                    BalloonSight
-                  </div>
-                  <p className="text-white/70 max-w-md leading-relaxed text-lg">
-                      Optimize your digital footprint for the new era of AI-powered search.
-                  </p>
-              </div>
-              <div>
-                  <h4 className="font-bold text-lg mb-6 text-accent">Product</h4>
-                  <ul className="space-y-4 text-white/80 font-medium">
-                      <li><a href="#" className="hover:text-white hover:underline">How It Works</a></li>
-                      <li><a href="#pricing" className="hover:text-white hover:underline">Pricing</a></li>
-                      <li><a href="#" className="hover:text-white hover:underline">API Docs</a></li>
-                  </ul>
-              </div>
-              <div>
-                  <h4 className="font-bold text-lg mb-6 text-accent">Company</h4>
-                  <ul className="space-y-4 text-white/80 font-medium">
-                      <li><a href="#" className="hover:text-white hover:underline">About Us</a></li>
-                      <li><a href="#" className="hover:text-white hover:underline">Blog</a></li>
-                      <li><a href="#" className="hover:text-white hover:underline">Contact</a></li>
-                  </ul>
-              </div>
-          </div>
-          <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/10 text-center text-white/40 text-sm">
-              © 2025 BalloonSight Inc. All rights reserved.
-          </div>
-      </footer>
+      <Footer />
 
     </main>
   );
