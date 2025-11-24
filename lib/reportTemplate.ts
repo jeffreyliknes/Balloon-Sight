@@ -43,9 +43,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
   
   // Generate logo URL - use absolute URL for Puppeteer
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                  'http://localhost:3000';
-  const logoUrl = `${baseUrl}/logo.png`;
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  const logoUrl = `${baseUrl}/balloonsight-logo.png`;
   
   // Extract persona data with defaults
   const persona = data.persona || {
@@ -84,6 +83,9 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 <html>
 <head>
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { 
       margin: 0; 
@@ -99,7 +101,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
       color: #1a1a1a; 
-      line-height: 1.6;
+      font-size: 14.5px;
+      line-height: 1.7;
       background: white;
     }
     
@@ -118,7 +121,7 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     
     /* PAGE 1 - Cover Page with Brand Color Background */
     .page-cover {
-      background: ${brandColor};
+      background: linear-gradient(180deg, #551121 0%, #3c0d18 100%);
       color: white;
       display: flex;
       flex-direction: column;
@@ -129,18 +132,22 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     }
     
     .logo-container {
-      margin-bottom: 60px;
+      margin-bottom: 50px;
     }
     
     .logo-container img {
-      width: 160px;
+      width: 200px;
       height: auto;
+      display: block;
+      margin: 0 auto;
       filter: brightness(0) invert(1); /* Make logo white */
     }
     
     .score-large {
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
       font-size: 110px;
-      font-weight: 900;
+      font-weight: 700;
+      letter-spacing: 1px;
       color: white;
       text-align: center;
       line-height: 1;
@@ -170,25 +177,29 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     
     /* General Page Styling */
     h1 {
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
       color: ${brandColor};
-      font-size: 32px;
+      font-size: 36px;
       margin-bottom: 20px;
       font-weight: 700;
+      letter-spacing: 0.5px;
       border-bottom: 3px solid ${brandColor};
       padding-bottom: 12px;
     }
     
     h2 {
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
       color: ${brandColor};
-      font-size: 24px;
-      margin-top: 30px;
+      font-size: 26px;
+      margin-top: 40px;
       margin-bottom: 16px;
       font-weight: 600;
     }
     
     h3 {
-      color: #444;
-      font-size: 18px;
+      font-family: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+      color: ${brandColor};
+      font-size: 20px;
       margin-top: 20px;
       margin-bottom: 12px;
       font-weight: 600;
@@ -197,13 +208,13 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     p {
       margin-bottom: 16px;
       color: #333;
-      font-size: 15px;
     }
     
     /* Code Blocks */
     .code-block {
-      background: #f4f4f4;
-      padding: 16px;
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 18px;
       border-radius: 8px;
       font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
       white-space: pre-wrap;
@@ -211,13 +222,22 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
       font-size: 13px;
       line-height: 1.6;
       margin: 16px 0;
-      border: 1px solid #ddd;
-      color: #333;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
     }
     
     /* Section Styling */
     .section {
-      margin-bottom: 30px;
+      margin: 40px 0;
+    }
+    
+    /* Card Components */
+    .section-card {
+      background: white;
+      border-radius: 10px;
+      padding: 22px 28px;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      margin: 28px 0;
     }
     
     .section-title {
@@ -234,11 +254,12 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     
     /* Persona Strategy Section */
     .persona-box {
-      background: #f8f9fa;
-      padding: 24px;
-      border-radius: 8px;
-      border-left: 4px solid ${brandColor};
-      margin: 16px 0;
+      background: white;
+      border-radius: 10px;
+      padding: 22px 28px;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      margin: 28px 0;
     }
     
     .persona-label {
@@ -297,23 +318,24 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     /* Technical Overview */
     .tech-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
       margin-top: 20px;
     }
     
     .tech-item {
-      padding: 20px;
-      border: 2px solid #e9ecef;
-      border-radius: 8px;
-      background: #f8f9fa;
+      background: white;
+      border-radius: 10px;
+      padding: 22px 28px;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
     
     .tech-label {
       font-weight: 600;
       font-size: 16px;
       color: #333;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     
     .tech-status {
@@ -321,9 +343,33 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
       color: #666;
     }
     
+    /* Status Badges */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    .badge-ok {
+      background: #e6f7ea;
+      color: #167a27;
+    }
+    
+    .badge-missing {
+      background: #fdeaea;
+      color: #a40000;
+    }
+    
+    .badge-partial {
+      background: #fff6e0;
+      color: #ad7200;
+    }
+    
     /* Closing Page */
     .page-closing {
-      background: #f7f7f7;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -340,11 +386,29 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
       height: auto;
     }
     
+    .closing-divider {
+      width: 100px;
+      height: 2px;
+      background: ${brandColor};
+      margin: 30px auto;
+    }
+    
     .closing-message {
       font-size: 18px;
       color: #333;
       line-height: 1.8;
       max-width: 500px;
+    }
+    
+    /* Page Footer */
+    .footer {
+      position: absolute;
+      bottom: 20px;
+      left: 40px;
+      right: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
     }
     
     /* List Styling */
@@ -382,7 +446,18 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
   <!-- PAGE 1: Cover Page -->
   <div class="page page-cover">
     <div class="logo-container">
-      <img src="${logoUrl}" alt="BalloonSight Logo" onerror="this.style.display='none';" />
+      <img 
+        src="${logoUrl}" 
+        alt="BalloonSight Logo" 
+        style="
+          width: 200px;
+          height: auto;
+          display: block;
+          margin: 0 auto 50px auto;
+          filter: brightness(0) invert(1);
+        "
+        onerror="this.style.display='none';" 
+      />
     </div>
     <div class="score-large">${score}</div>
     <div class="cover-subtitle">AI Visibility Score</div>
@@ -392,7 +467,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 
   <!-- PAGE 2: Executive Summary -->
   <div class="page">
-    <h1>Executive Summary</h1>
+    <h1>📊 Executive Summary</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 2</div>
     <div class="section">
       <div class="score-large" style="color: ${brandColor}; font-size: 72px; margin: 30px 0;">${score}/100</div>
       <p class="section-content">
@@ -429,7 +505,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 
   <!-- PAGE 3: Persona Strategy -->
   <div class="page">
-    <h1>Persona Strategy</h1>
+    <h1>👤 Persona Strategy</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 3</div>
     <p style="color: #666; margin-bottom: 30px;">
       Understanding your current audience and optimizing your positioning for AI systems.
     </p>
@@ -466,7 +543,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 
   <!-- PAGE 4: Content Upgrade Pack -->
   <div class="page">
-    <h1>Content Upgrade Pack</h1>
+    <h1>✏️ Content Upgrade Pack</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 4</div>
     <p style="color: #666; margin-bottom: 30px;">
       Ready-to-use content optimized for AI visibility. Copy and paste these directly into your website.
     </p>
@@ -503,13 +581,14 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 
   <!-- PAGE 5: FAQ Page -->
   <div class="page">
-    <h1>Complete FAQ Page</h1>
+    <h1>❓ Complete FAQ Page</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 5</div>
     <p style="color: #666; margin-bottom: 30px;">
       Pre-written FAQ content optimized for AI understanding. Use this on your website's FAQ page.
     </p>
     
     ${faqItems.map((item, index) => `
-      <div class="faq-item">
+      <div class="section-card">
         <div class="faq-question">Q${index + 1}: ${item.question}</div>
         <div class="faq-answer">${item.answer}</div>
       </div>
@@ -527,7 +606,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
 
   <!-- PAGE 6: FAQ Schema -->
   <div class="page">
-    <h1>FAQ Schema (JSON-LD)</h1>
+    <h1>🧩 FAQ Schema (JSON-LD)</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 6</div>
     <p style="color: #666; margin-bottom: 30px;">
       Copy and paste this code into your FAQ page's &lt;head&gt; section or before the closing &lt;/body&gt; tag.
     </p>
@@ -549,7 +629,8 @@ ${JSON.stringify(data.faqSchema || generateDefaultFAQSchema(faqItems), null, 2)}
 
   <!-- PAGE 7: Organization Schema -->
   <div class="page">
-    <h1>Organization Schema (JSON-LD)</h1>
+    <h1>🧩 Organization Schema (JSON-LD)</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 7</div>
     <p style="color: #666; margin-bottom: 30px;">
       Copy and paste this code into your homepage's &lt;head&gt; section or before the closing &lt;/body&gt; tag.
     </p>
@@ -572,41 +653,57 @@ ${JSON.stringify(data.orgSchema || generateDefaultOrgSchema(domain), null, 2)}
 
   <!-- PAGE 8: Technical Overview -->
   <div class="page">
-    <h1>Technical Overview</h1>
+    <h1>🔧 Technical Overview</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 8</div>
     <p style="color: #666; margin-bottom: 30px;">
       Current status of technical elements that affect AI visibility.
     </p>
     
     <div class="tech-grid">
+      ${(() => {
+        const getBadgeClass = (status: string | undefined) => {
+          if (!status) return 'badge-missing';
+          const statusLower = status.toLowerCase();
+          if (statusLower.includes('ok') || statusLower.includes('configured') || statusLower.includes('present') || statusLower.includes('detected') || statusLower.includes('https') || statusLower.includes('good') || statusLower.includes('responsive')) {
+            return 'badge-ok';
+          } else if (statusLower.includes('partial')) {
+            return 'badge-partial';
+          } else {
+            return 'badge-missing';
+          }
+        };
+        return `
       <div class="tech-item">
         <div class="tech-label">🤖 Robots.txt</div>
-        <div class="tech-status">${technical.robots}</div>
+        <span class="badge ${getBadgeClass(technical.robots)}">${technical.robots || 'Unknown'}</span>
       </div>
       
       <div class="tech-item">
         <div class="tech-label">🗺️ Sitemap.xml</div>
-        <div class="tech-status">${technical.sitemap}</div>
+        <span class="badge ${getBadgeClass(technical.sitemap)}">${technical.sitemap || 'Unknown'}</span>
       </div>
       
       <div class="tech-item">
         <div class="tech-label">📋 Schema Markup</div>
-        <div class="tech-status">${technical.schema}</div>
+        <span class="badge ${getBadgeClass(technical.schema)}">${technical.schema || 'Unknown'}</span>
       </div>
       
       <div class="tech-item">
         <div class="tech-label">⚡ Performance</div>
-        <div class="tech-status">${technical.performance}</div>
+        <span class="badge ${getBadgeClass(technical.performance)}">${technical.performance || 'Unknown'}</span>
       </div>
       
       <div class="tech-item">
         <div class="tech-label">📱 Mobile</div>
-        <div class="tech-status">${technical.mobile}</div>
+        <span class="badge ${getBadgeClass(technical.mobile)}">${technical.mobile || 'Unknown'}</span>
       </div>
       
       <div class="tech-item">
         <div class="tech-label">🔒 Security (HTTPS)</div>
-        <div class="tech-status">${technical.security}</div>
+        <span class="badge ${getBadgeClass(technical.security)}">${technical.security || 'Unknown'}</span>
       </div>
+        `;
+      })()}
     </div>
     
     <div class="section" style="margin-top: 40px;">
@@ -624,12 +721,15 @@ ${JSON.stringify(data.orgSchema || generateDefaultOrgSchema(domain), null, 2)}
 
   <!-- PAGE 9: Recommended Homepage Content Block -->
   <div class="page">
-    <h1>Recommended Homepage Content Block</h1>
+    <h1>🏠 Recommended Homepage Content Block</h1>
+    <div class="footer">BalloonSight – AI Visibility Report | Page 9</div>
     <p style="color: #666; margin-bottom: 30px;">
       Use this content block on your homepage to improve AI understanding of your value proposition.
     </p>
     
-    <div class="code-block">${data.recommendedContentBlock || `Welcome to ${domain}. We provide exceptional services tailored to your needs. Our team is dedicated to delivering results that exceed expectations. Contact us today to learn how we can help you achieve your goals.`}</div>
+    <div class="section-card">
+      <div class="code-block">${data.recommendedContentBlock || `Welcome to ${domain}. We provide exceptional services tailored to your needs. Our team is dedicated to delivering results that exceed expectations. Contact us today to learn how we can help you achieve your goals.`}</div>
+    </div>
     
     <div class="section" style="margin-top: 30px;">
       <h2>Where to Place This</h2>
@@ -652,14 +752,15 @@ ${JSON.stringify(data.orgSchema || generateDefaultOrgSchema(domain), null, 2)}
   <!-- PAGE 10: Closing Page -->
   <div class="page page-closing">
     <div class="closing-logo">
-      <img src="${logoUrl}" alt="BalloonSight Logo" onerror="this.style.display='none';" />
+      <img src="${logoUrl}" alt="BalloonSight Logo" style="width: 140px; height: auto;" onerror="this.style.display='none';" />
     </div>
+    <div class="closing-divider"></div>
     <div class="closing-message">
-      <p style="font-size: 24px; font-weight: 600; color: ${brandColor}; margin-bottom: 20px;">
+      <p style="font-family: 'Cormorant Garamond', 'Times New Roman', Georgia, serif; font-size: 28px; font-weight: 700; color: ${brandColor}; margin-bottom: 20px;">
         Thank you for using BalloonSight.
       </p>
-      <p style="font-size: 18px; color: #666;">
-        Your website is now more visible to AI systems.
+      <p style="font-size: 18px; color: #666; margin-top: 10px;">
+        🎈 Your website is now more visible to AI systems.
       </p>
     </div>
   </div>
