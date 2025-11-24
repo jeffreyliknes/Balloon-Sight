@@ -47,12 +47,21 @@ export async function generatePdf(html: string): Promise<Buffer> {
 
   try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: "networkidle0" });
+      
+      // Set content and wait for all resources (including images) to load
+      await page.setContent(html, { 
+        waitUntil: "networkidle0",
+        timeout: 30000 
+      });
+      
+      // Wait a bit more to ensure images are fully rendered (using Promise-based delay)
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Generate PDF with zero margins to allow full-page background on cover page
       const pdf = await page.pdf({
         format: "A4",
         printBackground: true,
-        margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" }
+        margin: { top: 0, bottom: 0, left: 0, right: 0 }
       });
 
       await browser.close();

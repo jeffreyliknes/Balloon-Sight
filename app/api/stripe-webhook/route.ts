@@ -4,7 +4,8 @@ import { stripe } from "@/lib/stripe";
 import { generatePdf } from "@/lib/pdf";
 import { generateFullReport } from "@/lib/reportTemplate";
 import { sendReport } from "@/lib/sendReport";
-import { analyzeHtml } from "@/actions/analyze-url";
+import { generateReportData } from "@/lib/generateReportData";
+import * as cheerio from "cheerio";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -49,13 +50,16 @@ export async function POST(req: Request) {
         }
         const scrapeData = await scrapeRes.json();
         const htmlContent = scrapeData.html;
-        const responseTime = scrapeData.time || 0;
         
-        // Analyze
-        const results = await analyzeHtml(htmlContent, domain, responseTime); 
+        // Extract clean text content
+        const $ = cheerio.load(htmlContent);
+        const textContent = $("body").text().replace(/\s+/g, " ").trim();
+        
+        // Generate complete ReportData with AI-powered content
+        const reportData = await generateReportData(domain, htmlContent, textContent);
 
-        // 2. Generate Report
-        const html = generateFullReport(domain, results);
+        // 2. Generate Report PDF
+        const html = generateFullReport(domain, reportData);
         const pdf = await generatePdf(html);
 
         // 3. Send Email
