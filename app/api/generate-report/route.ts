@@ -20,8 +20,8 @@ export async function POST(req: Request) {
     // Generate PDF from HTML
     const pdfBuffer = await generatePdf(html);
 
-    // Return PDF as response
-    return new NextResponse(pdfBuffer, {
+    // Return PDF as response (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="balloonsight-report-${domain.replace(/[^a-z0-9]/gi, '-')}.pdf"`,
@@ -102,7 +102,7 @@ export async function GET(req: Request) {
     const html = generateFullReport(domain, sampleData);
     const pdfBuffer = await generatePdf(html);
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="balloonsight-report-${domain.replace(/[^a-z0-9]/gi, '-')}.pdf"`,

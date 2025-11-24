@@ -100,8 +100,8 @@ export async function GET(req: Request) {
     // Generate PDF from HTML
     const pdfBuffer = await generatePdf(html);
 
-    // Return PDF with auto-download headers
-    return new NextResponse(pdfBuffer, {
+    // Return PDF with auto-download headers (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="balloonsight-report-${domain.replace(/[^a-z0-9]/gi, '-')}.pdf"`,
