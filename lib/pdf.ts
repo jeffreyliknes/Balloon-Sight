@@ -1,5 +1,4 @@
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
 
 export async function generatePdf(html: string): Promise<Buffer> {
   let browser;
@@ -8,14 +7,17 @@ export async function generatePdf(html: string): Promise<Buffer> {
   const isProduction = process.env.NODE_ENV === "production";
 
   if (isProduction) {
+    // Dynamic import for Vercel - only load when needed
+    const chromium = await import("@sparticuz/chromium");
+    
     // Configure sparticuz/chromium for Vercel
-    chromium.setGraphicsMode = false;
+    chromium.default.setGraphicsMode = false;
     
     browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      args: chromium.default.args,
+      defaultViewport: chromium.default.defaultViewport,
+      executablePath: await chromium.default.executablePath(),
+      headless: chromium.default.headless,
     });
   } else {
     // Local development fallback
