@@ -1,6 +1,6 @@
-import puppeteer from "puppeteer-core";
-
 export async function generatePdf(html: string): Promise<Buffer> {
+  // Dynamic import to avoid build-time resolution issues
+  const puppeteer = await import("puppeteer-core");
   let browser;
 
   // Check if running in a serverless environment (Vercel)
@@ -13,7 +13,7 @@ export async function generatePdf(html: string): Promise<Buffer> {
     // Configure sparticuz/chromium for Vercel
     chromium.default.setGraphicsMode = false;
     
-    browser = await puppeteer.launch({
+    browser = await puppeteer.default.launch({
       args: chromium.default.args,
       defaultViewport: chromium.default.defaultViewport,
       executablePath: await chromium.default.executablePath(),
@@ -34,7 +34,7 @@ export async function generatePdf(html: string): Promise<Buffer> {
     }
 
     try {
-        browser = await puppeteer.launch({
+        browser = await puppeteer.default.launch({
             executablePath,
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
