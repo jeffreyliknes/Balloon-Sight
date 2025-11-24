@@ -1,7 +1,21 @@
 import OpenAI from "openai";
 import * as cheerio from "cheerio";
-import { analyzeHtml } from "@/actions/analyze-url";
 import { ReportData } from "@/lib/reportTemplate";
+
+interface Metadata {
+  title: string | null;
+  metaDescription: string | null;
+  jsonLd: any[] | null;
+}
+
+interface TechnicalInput {
+  robots: "OK" | "Missing" | "Blocked" | "Warning";
+  sitemap: "OK" | "Missing" | "Warning";
+  schema: "OK" | "Partial" | "Missing";
+  performance: number | null;
+  mobile: "Good" | "Poor" | "Unknown";
+  security: "HTTPS" | "Missing";
+}
 
 /**
  * Generates complete ReportData for a domain based on scraped content
@@ -9,53 +23,52 @@ import { ReportData } from "@/lib/reportTemplate";
  */
 export async function generateReportData(
   domain: string,
-  rawHTML: string,
-  textContent: string
+  html: string,
+  textContent: string,
+  metadata: Metadata,
+  technical: TechnicalInput
 ): Promise<ReportData> {
-  const $ = cheerio.load(rawHTML);
+  const $ = cheerio.load(html);
   const url = domain.startsWith("http") ? domain : `https://${domain}`;
-  const urlObj = new URL(url);
 
-  // 1. Run technical analysis
-  const analysisResult = await analyzeHtml(rawHTML, domain, 0);
-
-  // 2. Extract technical information
-  const technical = {
-    robots: getTechnicalStatus(analysisResult, "robots-txt"),
-    sitemap: await checkSitemap(urlObj),
-    schema: analysisResult.rawJsonLd && analysisResult.rawJsonLd.length > 0 
-      ? `${analysisResult.rawJsonLd.length} JSON-LD schema(s) detected`
-      : "No schema detected",
-    performance: getPerformanceStatus(analysisResult),
-    mobile: checkMobileFriendly($),
-    security: urlObj.protocol === "https:" ? "HTTPS enabled" : "HTTP only"
+  // Format technical fields for output
+  const technicalFormatted = {
+    robots: formatRobotsStatus(technical.robots),
+    sitemap: formatSitemapStatus(technical.sitemap),
+    schema: formatSchemaStatus(technical.schema),
+    performance: formatPerformanceStatus(technical.performance),
+    mobile: formatMobileStatus(technical.mobile),
+    security: formatSecurityStatus(technical.security)
   };
 
   // 3. Use AI to generate domain-specific content
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     // Fallback to basic data if no API key
-    return generateFallbackReportData(domain, analysisResult, technical);
+    return generateFallbackReportData(domain, technicalFormatted);
   }
 
   try {
     const openai = new OpenAI({ apiKey });
     
-    // Generate all AI-powered content in parallel
-    const [personaData, contentPack, faqData, recommendedContent] = await Promise.all([
-      generatePersonaStrategy(openai, textContent, $),
-      generateContentPack(openai, textContent, $),
+    // First generate persona (needed for content pack)
+    const personaData = await generatePersonaStrategy(openai, textContent, $, metadata);
+    
+    // Then generate remaining content in parallel
+    const [contentPack, faqData, recommendedContent, score] = await Promise.all([
+      generateContentPack(openai, textContent, $, metadata, personaData),
       generateFAQ(openai, textContent, $),
-      generateRecommendedContentBlock(openai, textContent, $)
+      generateRecommendedContentBlock(openai, textContent, $),
+      calculateScore(textContent, $, metadata, technical)
     ]);
 
     // Generate schemas
     const faqSchema = generateFAQSchema(faqData.items);
-    const orgSchema = await generateOrganizationSchema(openai, domain, $, textContent);
+    const orgSchema = await generateOrganizationSchema(openai, domain, $, textContent, metadata);
 
     return {
       domain,
-      score: analysisResult.score,
+      score,
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       persona: personaData,
       contentPack,
@@ -63,11 +76,11 @@ export async function generateReportData(
       faqSchema,
       orgSchema,
       recommendedContentBlock: recommendedContent,
-      technical
+      technical: technicalFormatted
     };
   } catch (error) {
     console.error("Error generating AI content:", error);
-    return generateFallbackReportData(domain, analysisResult, technical);
+    return generateFallbackReportData(domain, technicalFormatted);
   }
 }
 
@@ -76,24 +89,42 @@ export async function generateReportData(
 async function generatePersonaStrategy(
   openai: OpenAI,
   textContent: string,
-  $: cheerio.CheerioAPI
+  $: cheerio.CheerioAPI,
+  metadata: Metadata
 ): Promise<{ currentAudience: string; recommendedAudience: string; positioning: string; tone: string }> {
-  const prompt = `Analyze this website content and provide persona strategy:
+  const prompt = `You are analyzing a website to determine its persona strategy. Analyze the following content deeply:
 
-${textContent.substring(0, 3000)}
+${textContent.substring(0, 4000)}
 
-Provide a JSON object with these exact keys:
-- currentAudience: Who the site is actually attracting now (1 sentence)
-- recommendedAudience: Who they should target for better AI visibility (1 sentence)
-- positioning: A clear positioning statement (1 sentence)
+Metadata:
+- Title: ${metadata.title || "Not provided"}
+- Description: ${metadata.metaDescription || "Not provided"}
+
+Analyze:
+1. TONE: What is the writing style? (formal, casual, friendly, professional, etc.)
+2. OFFERINGS: What products/services are mentioned?
+3. VISUALS: What visual elements are described? (design style, imagery, aesthetics)
+4. AMENITIES: What features/benefits are highlighted?
+5. PRICE SIGNALS: What pricing cues exist? (premium, budget, mid-range, etc.)
+6. STYLE: Overall brand personality and positioning
+
+Based on this analysis:
+- currentAudience: Who is the site actually attracting now? Be specific about demographics, psychographics, and behaviors. (1 sentence)
+- recommendedAudience: Who should they target for better AI visibility? This must be:
+  * Realistic (aligned with what they offer)
+  * Profitable (worth targeting)
+  * Tightly defined (NOT generic - be specific about niche)
+  * Aligned with their offerings (1 sentence)
+- positioning: A clear, compelling positioning statement that differentiates them (1 sentence)
 - tone: Suggested brand tone (3-4 words, comma-separated)
 
-Return ONLY valid JSON, no markdown, no explanations.`;
+Return ONLY valid JSON with keys: currentAudience, recommendedAudience, positioning, tone
+No markdown, no explanations, no commentary.`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are a brand strategist. Return only valid JSON." },
+      { role: "system", content: "You are an expert brand strategist. Analyze websites and provide strategic persona recommendations. Return only valid JSON." },
       { role: "user", content: prompt }
     ],
     response_format: { type: "json_object" },
@@ -121,24 +152,46 @@ Return ONLY valid JSON, no markdown, no explanations.`;
 async function generateContentPack(
   openai: OpenAI,
   textContent: string,
-  $: cheerio.CheerioAPI
+  $: cheerio.CheerioAPI,
+  metadata: Metadata,
+  personaData: { recommendedAudience: string; tone: string }
 ): Promise<{ h1: string; h2s: string[]; metaDescription: string; introParagraph: string }> {
   const h1 = $("h1").first().text().trim() || "";
   const existingH2s = $("h2").map((_, el) => $(el).text().trim()).get().slice(0, 5);
-  const metaDesc = $('meta[name="description"]').attr("content") || "";
+  const metaDesc = metadata.metaDescription || $('meta[name="description"]').attr("content") || "";
 
-  const prompt = `Based on this website content, generate optimized content:
+  const prompt = `Generate optimized website content for this business. The recommended niche audience is: "${personaData.recommendedAudience}". The brand tone is: "${personaData.tone}".
 
-${textContent.substring(0, 3000)}
+Website content:
+${textContent.substring(0, 4000)}
 
 Current H1: ${h1}
 Existing H2s: ${existingH2s.join(", ")}
+Current meta description: ${metaDesc}
 
-Generate:
-1. A compelling H1 (target the recommended niche audience, NOT about AI visibility)
-2. 3-5 H2 subheadings (array)
-3. A meta description (150-160 characters, optimized for search and AI)
-4. An intro paragraph for homepage hero section (80-120 words, compelling, about the business)
+Generate NEW content targeted to the recommended niche audience:
+
+1. H1: One strong headline that is:
+   - Niche-targeted (speaks directly to the recommended audience)
+   - Clear and human-readable
+   - No marketing fluff
+   - About the business, NOT about AI visibility or BalloonSight
+
+2. H2s: 3-6 subheadings (array) that create structure for homepage sections:
+   - Domain-specific
+   - Relevant to the business
+   - Create logical flow
+
+3. Meta Description: 160 characters max (exactly)
+   - Accurately represents the business
+   - Optimized for search and AI
+   - No fluff
+
+4. Intro Paragraph: 120-200 words
+   - Optimized for the recommended niche
+   - Keep brand tone consistent (${personaData.tone})
+   - Rewrite their homepage hero text but better
+   - About the business, NOT about AI visibility
 
 Return JSON with keys: h1, h2s (array), metaDescription, introParagraph
 ONLY valid JSON, no markdown.`;
@@ -146,7 +199,7 @@ ONLY valid JSON, no markdown.`;
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are a content strategist. Return only valid JSON." },
+      { role: "system", content: "You are a content strategist specializing in niche-targeted copywriting. Return only valid JSON." },
       { role: "user", content: prompt }
     ],
     response_format: { type: "json_object" },
@@ -157,15 +210,15 @@ ONLY valid JSON, no markdown.`;
     const data = JSON.parse(completion.choices[0].message.content || "{}");
     return {
       h1: data.h1 || h1 || "Welcome",
-      h2s: Array.isArray(data.h2s) ? data.h2s : (data.h2s ? [data.h2s] : ["Section 1", "Section 2", "Section 3"]),
-      metaDescription: data.metaDescription || metaDesc || "Professional services and solutions",
+      h2s: Array.isArray(data.h2s) ? data.h2s.slice(0, 6) : (data.h2s ? [data.h2s] : ["Section 1", "Section 2", "Section 3"]),
+      metaDescription: (data.metaDescription || metaDesc || "Professional services and solutions").substring(0, 160),
       introParagraph: data.introParagraph || "We provide exceptional services tailored to your needs."
     };
   } catch {
     return {
       h1: h1 || "Welcome",
       h2s: existingH2s.length > 0 ? existingH2s : ["Section 1", "Section 2", "Section 3"],
-      metaDescription: metaDesc || "Professional services and solutions",
+      metaDescription: (metaDesc || "Professional services and solutions").substring(0, 160),
       introParagraph: "We provide exceptional services tailored to your needs."
     };
   }
@@ -191,26 +244,49 @@ async function generateFAQ(
     }
   });
 
-  const prompt = `Based on this website content, generate 6-8 relevant FAQ items:
+  // Determine business type from content
+  const lowerText = textContent.toLowerCase();
+  let businessType = "general business";
+  let faqExamples = "";
+  
+  if (lowerText.includes("hotel") || lowerText.includes("apartment") || lowerText.includes("lodging") || lowerText.includes("accommodation")) {
+    businessType = "hotel/apartment/lodging";
+    faqExamples = "Examples: check-in/check-out times, amenities (WiFi, parking, breakfast), location details, long-term stays, cleaning services, cancellation policy, pet policies, payment methods";
+  } else if (lowerText.includes("restaurant") || lowerText.includes("cafe") || lowerText.includes("dining")) {
+    businessType = "restaurant/cafe";
+    faqExamples = "Examples: menu options, dietary restrictions, reservations, hours, group bookings, parking, delivery options";
+  } else if (lowerText.includes("rental") || lowerText.includes("property")) {
+    businessType = "rental/property";
+    faqExamples = "Examples: deposits, cleaning fees, long stays, check-in process, amenities, cancellation, pet policies, minimum stay";
+  } else if (lowerText.includes("service") || lowerText.includes("consulting")) {
+    businessType = "service/consulting";
+    faqExamples = "Examples: pricing, process/workflow, guarantees, timeline, what's included, support, payment terms";
+  }
 
-${textContent.substring(0, 3000)}
+  const prompt = `Generate a complete FAQ page for this ${businessType} business.
+
+Website content:
+${textContent.substring(0, 4000)}
 
 ${existingFAQs.length > 0 ? `Existing FAQs found: ${JSON.stringify(existingFAQs)}` : ""}
 
-Generate FAQs that are:
-- Relevant to this business
+Generate MINIMUM 6 FAQ items that are:
+- Tailored to their industry (${businessType})
+- Relevant to their real offerings
+- Specific to their location (if mentioned)
+- Match their persona/brand
 - Common questions customers would ask
-- Specific to their industry/service type
-- Helpful for AI systems to understand the business
+${faqExamples ? `- Include questions about: ${faqExamples}` : ""}
+
+Each answer should be 2-4 sentences, helpful and specific.
 
 Return JSON with key "items" containing array of {question, answer} objects.
-Each answer should be 2-4 sentences.
 ONLY valid JSON, no markdown.`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are a content strategist. Return only valid JSON." },
+      { role: "system", content: "You are a content strategist specializing in FAQ creation. Return only valid JSON." },
       { role: "user", content: prompt }
     ],
     response_format: { type: "json_object" },
@@ -251,25 +327,25 @@ async function generateRecommendedContentBlock(
   textContent: string,
   $: cheerio.CheerioAPI
 ): Promise<string> {
-  const prompt = `Write a compelling homepage content block (120-160 words) for this business:
+  const prompt = `Write a compelling homepage content block (100-150 words) for this business:
 
-${textContent.substring(0, 3000)}
+${textContent.substring(0, 4000)}
 
-The content should:
-- Summarize their value proposition
-- Identify their niche audience
-- Highlight their specialty
-- Mention key features/amenities (if applicable)
-- Convey their vibe/style
-- Explain why people choose them
+The content must clearly communicate:
+- What they offer (specific services/products)
+- Who it's for (target audience/niche)
+- Why they're unique (differentiation)
+- Their vibe/style (brand personality)
+- The recommended niche (who should choose them)
 
-Write in their brand voice. Do NOT mention AI visibility or BalloonSight.
+Write for BOTH humans AND AIs. Be clear, specific, and compelling.
+Do NOT mention AI visibility, BalloonSight, or any analysis tools.
 Return ONLY the paragraph text, no JSON, no markdown, no quotes.`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "You are a copywriter. Return only the paragraph text." },
+      { role: "system", content: "You are a copywriter specializing in homepage content. Return only the paragraph text." },
       { role: "user", content: prompt }
     ],
     temperature: 0.8,
@@ -284,51 +360,82 @@ async function generateOrganizationSchema(
   openai: OpenAI,
   domain: string,
   $: cheerio.CheerioAPI,
-  textContent: string
+  textContent: string,
+  metadata: Metadata
 ): Promise<any> {
-  // Extract existing schema if present
-  const existingSchemas = $('script[type="application/ld+json"]');
+  // Use existing schema from metadata if available
   let orgSchema: any = null;
-  
-  existingSchemas.each((_, el) => {
-    try {
-      const data = JSON.parse($(el).html() || "{}");
-      if (data["@type"] === "Organization" || data["@type"] === "LocalBusiness" || 
-          data["@type"] === "Hotel" || data["@type"] === "LodgingBusiness") {
-        orgSchema = data;
-        return false; // break
+  if (metadata.jsonLd && metadata.jsonLd.length > 0) {
+    for (const schema of metadata.jsonLd) {
+      if (schema["@type"] === "Organization" || schema["@type"] === "LocalBusiness" || 
+          schema["@type"] === "Hotel" || schema["@type"] === "LodgingBusiness" ||
+          schema["@type"] === "Apartment") {
+        orgSchema = schema;
+        break;
       }
-    } catch {}
-  });
+    }
+  }
 
   // Extract basic info
-  const name = $('meta[property="og:site_name"]').attr("content") || 
+  const name = metadata.title?.split("|")[0].trim() || 
+               $('meta[property="og:site_name"]').attr("content") || 
                $("title").text().split("|")[0].trim() || 
                domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  
   const logo = $('meta[property="og:image"]').attr("content") || 
                $('link[rel="icon"]').attr("href") || 
                `${domain}/logo.png`;
-  const description = $('meta[name="description"]').attr("content") || 
+  
+  const description = metadata.metaDescription || 
+                      $('meta[name="description"]').attr("content") || 
                       $('meta[property="og:description"]').attr("content") || 
                       textContent.substring(0, 200);
 
-  // Try to extract address/phone from content or existing schema
+  // Try to extract address/phone from content
   const addressMatch = textContent.match(/(\d+[\s\w]+(?:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|way|lane|ln)[\s\w,]+(?:[A-Z]{2}|[A-Za-z\s]+)\s\d{5})/i);
   const phoneMatch = textContent.match(/(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+
+  // Extract social links
+  const sameAs: string[] = [];
+  $('a[href*="facebook.com"], a[href*="twitter.com"], a[href*="instagram.com"], a[href*="linkedin.com"]').each((_, el) => {
+    const href = $(el).attr("href");
+    if (href && !sameAs.includes(href)) {
+      sameAs.push(href);
+    }
+  });
 
   if (orgSchema) {
     // Enhance existing schema
     orgSchema.name = orgSchema.name || name;
     orgSchema.url = orgSchema.url || domain;
-    orgSchema.logo = orgSchema.logo || logo;
+    orgSchema.logo = orgSchema.logo || (logo.startsWith("http") ? logo : `${domain}${logo.startsWith("/") ? "" : "/"}${logo}`);
     orgSchema.description = orgSchema.description || description;
+    if (sameAs.length > 0) orgSchema.sameAs = sameAs;
     return orgSchema;
+  }
+
+  // Determine correct schema type
+  const lowerText = textContent.toLowerCase();
+  let schemaType = "Organization";
+  
+  if (lowerText.includes("hotel") || lowerText.includes("lodging")) {
+    schemaType = "Hotel";
+  } else if (lowerText.includes("apartment") && (lowerText.includes("rent") || lowerText.includes("stay"))) {
+    schemaType = "Apartment";
+  } else if (lowerText.includes("apartment") || lowerText.includes("lodging") || lowerText.includes("accommodation")) {
+    schemaType = "LodgingBusiness";
+  } else if (lowerText.includes("restaurant") || lowerText.includes("cafe") || lowerText.includes("food")) {
+    schemaType = "Restaurant";
+  } else if (lowerText.includes("shop") || lowerText.includes("store") || lowerText.includes("retail")) {
+    schemaType = "Store";
+  } else if (lowerText.includes("service") || lowerText.includes("business") || lowerText.includes("company")) {
+    schemaType = "LocalBusiness";
   }
 
   // Generate new schema
   const schema: any = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": schemaType,
     "name": name,
     "url": domain,
     "logo": logo.startsWith("http") ? logo : `${domain}${logo.startsWith("/") ? "" : "/"}${logo}`,
@@ -346,14 +453,25 @@ async function generateOrganizationSchema(
     schema.telephone = phoneMatch[0];
   }
 
-  // Try to determine business type from content
-  const lowerText = textContent.toLowerCase();
-  if (lowerText.includes("hotel") || lowerText.includes("apartment") || lowerText.includes("lodging")) {
-    schema["@type"] = "LodgingBusiness";
-  } else if (lowerText.includes("restaurant") || lowerText.includes("cafe") || lowerText.includes("food")) {
-    schema["@type"] = "Restaurant";
-  } else if (lowerText.includes("product") || lowerText.includes("shop") || lowerText.includes("store")) {
-    schema["@type"] = "Store";
+  if (sameAs.length > 0) {
+    schema.sameAs = sameAs;
+  } else {
+    schema.sameAs = [];
+  }
+
+  // Add amenities for lodging businesses
+  if (schemaType === "Hotel" || schemaType === "LodgingBusiness" || schemaType === "Apartment") {
+    const amenities: string[] = [];
+    if (lowerText.includes("wifi") || lowerText.includes("wi-fi")) amenities.push("WiFi");
+    if (lowerText.includes("parking")) amenities.push("Parking");
+    if (lowerText.includes("breakfast")) amenities.push("Breakfast");
+    if (lowerText.includes("gym") || lowerText.includes("fitness")) amenities.push("Fitness Center");
+    if (amenities.length > 0) {
+      schema.amenityFeature = amenities.map(amenity => ({
+        "@type": "LocationFeatureSpecification",
+        "name": amenity
+      }));
+    }
   }
 
   return schema;
@@ -374,52 +492,124 @@ function generateFAQSchema(faqItems: Array<{ question: string; answer: string }>
   };
 }
 
-// --- Helper Functions ---
+// --- Score Calculation ---
 
-function getTechnicalStatus(result: any, checkId: string): string {
-  for (const category of Object.values(result.categories || {}) as any[]) {
-    const check = category.checks?.find((c: any) => c.id === checkId);
-    if (check) {
-      if (check.status === "pass") return "Configured correctly";
-      if (check.status === "warning") return "Needs attention";
-      return "Missing or incorrect";
-    }
-  }
-  return "Unknown";
+async function calculateScore(
+  textContent: string,
+  $: cheerio.CheerioAPI,
+  metadata: Metadata,
+  technical: TechnicalInput
+): Promise<number> {
+  let score = 0;
+
+  // Clarity (0-15 points)
+  const hasTitle = !!metadata.title;
+  const hasMetaDesc = !!metadata.metaDescription;
+  const hasH1 = $("h1").length > 0;
+  score += (hasTitle ? 5 : 0) + (hasMetaDesc ? 5 : 0) + (hasH1 ? 5 : 0);
+
+  // Structure (0-15 points)
+  const semanticTags = ["article", "main", "nav", "aside", "section"].filter(tag => $(tag).length > 0).length;
+  const h2Count = $("h2").length;
+  score += Math.min(semanticTags * 3, 9) + Math.min(Math.floor(h2Count / 2) * 2, 6);
+
+  // Schema (0-15 points)
+  if (technical.schema === "OK") score += 15;
+  else if (technical.schema === "Partial") score += 8;
+  else score += 0;
+
+  // Persona Specificity (0-15 points)
+  const textLength = textContent.length;
+  const hasValueProp = /value|benefit|solution|problem|help|serve/i.test(textContent);
+  const hasAudience = /for|target|audience|customers|clients/i.test(textContent);
+  score += (hasValueProp ? 7 : 0) + (hasAudience ? 8 : 0);
+
+  // Content Quality (0-15 points)
+  const wordCount = textContent.split(/\s+/).length;
+  score += Math.min(Math.floor(wordCount / 100), 15);
+
+  // Technical Readiness (0-15 points)
+  let techScore = 0;
+  if (technical.robots === "OK") techScore += 3;
+  else if (technical.robots === "Warning") techScore += 1;
+  if (technical.sitemap === "OK") techScore += 3;
+  else if (technical.sitemap === "Warning") techScore += 1;
+  if (technical.security === "HTTPS") techScore += 3;
+  if (technical.mobile === "Good") techScore += 3;
+  if (technical.performance !== null && technical.performance >= 80) techScore += 3;
+  else if (technical.performance !== null && technical.performance >= 60) techScore += 1;
+  score += techScore;
+
+  // Text Richness (0-10 points)
+  const textToHtmlRatio = textContent.length / ($("html").html()?.length || 1);
+  score += Math.min(Math.floor(textToHtmlRatio * 50), 10);
+
+  return Math.min(Math.max(score, 0), 100);
 }
 
-async function checkSitemap(url: URL): Promise<string> {
-  try {
-    const sitemapUrl = `${url.origin}/sitemap.xml`;
-    const res = await fetch(sitemapUrl, { signal: AbortSignal.timeout(5000) });
-    if (res.ok) return "Present at /sitemap.xml";
-    return "Not found";
-  } catch {
-    return "Not found";
+// --- Technical Field Formatting ---
+
+function formatRobotsStatus(status: "OK" | "Missing" | "Blocked" | "Warning"): string {
+  switch (status) {
+    case "OK": return "Configured correctly";
+    case "Blocked": return "AI bots blocked";
+    case "Warning": return "Needs attention";
+    case "Missing": return "Not found";
+    default: return "Unknown";
   }
 }
 
-function getPerformanceStatus(result: any): string {
-  const score = result.categories?.accessibility?.score || 0;
-  if (score >= 80) return `Excellent - ${score}/100`;
-  if (score >= 60) return `Good - ${score}/100`;
+function formatSitemapStatus(status: "OK" | "Missing" | "Warning"): string {
+  switch (status) {
+    case "OK": return "Present at /sitemap.xml";
+    case "Warning": return "Needs attention";
+    case "Missing": return "Not found";
+    default: return "Unknown";
+  }
+}
+
+function formatSchemaStatus(status: "OK" | "Partial" | "Missing"): string {
+  switch (status) {
+    case "OK": return "Detected";
+    case "Partial": return "Partial schema";
+    case "Missing": return "No schema detected";
+    default: return "Unknown";
+  }
+}
+
+function formatPerformanceStatus(score: number | null): string {
+  if (score === null) return "Unknown";
+  if (score >= 80) return `Good - ${score}/100`;
+  if (score >= 60) return `Moderate - ${score}/100`;
   return `Needs improvement - ${score}/100`;
 }
 
-function checkMobileFriendly($: cheerio.CheerioAPI): string {
-  const viewport = $('meta[name="viewport"]').attr("content");
-  if (viewport) return "Responsive design";
-  return "Unknown";
+function formatMobileStatus(status: "Good" | "Poor" | "Unknown"): string {
+  switch (status) {
+    case "Good": return "Responsive design";
+    case "Poor": return "Not mobile-friendly";
+    case "Unknown": return "Unknown";
+    default: return "Unknown";
+  }
 }
+
+function formatSecurityStatus(status: "HTTPS" | "Missing"): string {
+  switch (status) {
+    case "HTTPS": return "HTTPS enabled";
+    case "Missing": return "HTTP only";
+    default: return "Unknown";
+  }
+}
+
+// --- Fallback ---
 
 function generateFallbackReportData(
   domain: string,
-  analysisResult: any,
   technical: any
 ): ReportData {
   return {
     domain,
-    score: analysisResult.score,
+    score: 50,
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     persona: {
       currentAudience: "General audience",
@@ -446,10 +636,10 @@ function generateFallbackReportData(
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": domain.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-      "url": domain
+      "url": domain,
+      "sameAs": []
     },
     recommendedContentBlock: "We provide exceptional services tailored to your needs. Our team is dedicated to delivering results that exceed expectations.",
     technical
   };
 }
-
