@@ -43,7 +43,20 @@ export async function generateReportData(
 
   // 3. Use AI to generate domain-specific content
   const apiKey = process.env.OPENAI_API_KEY;
+  
+  // Debug logging
+  console.log("🔍 [generateReportData] Starting report generation for:", domain);
+  console.log("🔍 [generateReportData] Text content length:", textContent.length);
+  console.log("🔍 [generateReportData] Text content preview:", textContent.substring(0, 300));
+  console.log("🔍 [generateReportData] Has OpenAI API key:", !!apiKey);
+  console.log("🔍 [generateReportData] Metadata:", {
+    title: metadata.title?.substring(0, 100),
+    metaDescription: metadata.metaDescription?.substring(0, 100),
+    jsonLdCount: metadata.jsonLd?.length || 0
+  });
+  
   if (!apiKey) {
+    console.warn("⚠️ [generateReportData] No OPENAI_API_KEY found - using fallback data");
     // Fallback to basic data if no API key
     return generateFallbackReportData(domain, technicalFormatted);
   }
@@ -51,9 +64,12 @@ export async function generateReportData(
   try {
     const openai = new OpenAI({ apiKey });
     
+    console.log("✅ [generateReportData] OpenAI client created, generating persona strategy...");
     // First generate persona (needed for content pack)
     const personaData = await generatePersonaStrategy(openai, textContent, $, metadata);
+    console.log("✅ [generateReportData] Persona generated:", personaData);
     
+    console.log("✅ [generateReportData] Generating content pack, FAQ, and recommended content...");
     // Then generate remaining content in parallel
     const [contentPack, faqData, recommendedContent, score] = await Promise.all([
       generateContentPack(openai, textContent, $, metadata, personaData),
@@ -61,10 +77,18 @@ export async function generateReportData(
       generateRecommendedContentBlock(openai, textContent, $),
       calculateScore(textContent, $, metadata, technical)
     ]);
+    
+    console.log("✅ [generateReportData] Content generated:", {
+      h1: contentPack.h1?.substring(0, 50),
+      faqCount: faqData.items.length,
+      score
+    });
 
     // Generate schemas
+    console.log("✅ [generateReportData] Generating schemas...");
     const faqSchema = generateFAQSchema(faqData.items);
     const orgSchema = await generateOrganizationSchema(openai, domain, $, textContent, metadata);
+    console.log("✅ [generateReportData] Report generation complete!");
 
     return {
       domain,
@@ -79,7 +103,15 @@ export async function generateReportData(
       technical: technicalFormatted
     };
   } catch (error) {
-    console.error("Error generating AI content:", error);
+    console.error("❌ [generateReportData] Error generating AI content:", error);
+    console.error("❌ [generateReportData] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      domain,
+      hasApiKey: !!apiKey,
+      textContentLength: textContent.length,
+      textContentPreview: textContent.substring(0, 200)
+    });
     return generateFallbackReportData(domain, technicalFormatted);
   }
 }
@@ -92,7 +124,13 @@ async function generatePersonaStrategy(
   $: cheerio.CheerioAPI,
   metadata: Metadata
 ): Promise<{ currentAudience: string; recommendedAudience: string; positioning: string; tone: string }> {
-  const prompt = `You are analyzing a website to determine its persona strategy. Analyze the following content deeply:
+  const prompt = `CRITICAL INSTRUCTIONS:
+- You are analyzing the website: ${metadata.title || "the provided website"}
+- This is a REAL BUSINESS website (hotel, restaurant, service, etc.)
+- DO NOT mention "BalloonSight", "AI visibility", "analysis tools", or any reporting services
+- Generate content ONLY about the business itself - their actual services, offerings, and value proposition
+
+You are analyzing a website to determine its persona strategy. Analyze the following content deeply:
 
 ${textContent.substring(0, 4000)}
 
@@ -160,7 +198,13 @@ async function generateContentPack(
   const existingH2s = $("h2").map((_, el) => $(el).text().trim()).get().slice(0, 5);
   const metaDesc = metadata.metaDescription || $('meta[name="description"]').attr("content") || "";
 
-  const prompt = `Generate optimized website content for this business. The recommended niche audience is: "${personaData.recommendedAudience}". The brand tone is: "${personaData.tone}".
+  const prompt = `CRITICAL INSTRUCTIONS:
+- You are generating content for: ${metadata.title || "the business website"}
+- This is a REAL BUSINESS (hotel, restaurant, service, etc.) - NOT BalloonSight or an analysis tool
+- DO NOT mention "AI visibility", "BalloonSight", "analysis", "reporting", or any meta-services
+- Generate content ONLY about the business itself - their actual services, offerings, amenities, location, etc.
+
+Generate optimized website content for this business. The recommended niche audience is: "${personaData.recommendedAudience}". The brand tone is: "${personaData.tone}".
 
 Website content:
 ${textContent.substring(0, 4000)}
@@ -175,10 +219,11 @@ Generate NEW content targeted to the recommended niche audience:
    - Niche-targeted (speaks directly to the recommended audience)
    - Clear and human-readable
    - No marketing fluff
-   - About the business, NOT about AI visibility or BalloonSight
+   - About the business itself (hotel rooms, restaurant dishes, services offered, etc.)
+   - ABSOLUTELY NOT about AI visibility, BalloonSight, or analysis tools
 
 2. H2s: 3-6 subheadings (array) that create structure for homepage sections:
-   - Domain-specific
+   - Domain-specific (about their actual offerings)
    - Relevant to the business
    - Create logical flow
 
@@ -186,12 +231,14 @@ Generate NEW content targeted to the recommended niche audience:
    - Accurately represents the business
    - Optimized for search and AI
    - No fluff
+   - About the business, NOT about analysis or reporting
 
 4. Intro Paragraph: 120-200 words
    - Optimized for the recommended niche
    - Keep brand tone consistent (${personaData.tone})
    - Rewrite their homepage hero text but better
-   - About the business, NOT about AI visibility
+   - About the business itself (what they offer, who they serve, why choose them)
+   - ABSOLUTELY NOT about AI visibility or BalloonSight
 
 Return JSON with keys: h1, h2s (array), metaDescription, introParagraph
 ONLY valid JSON, no markdown.`;
@@ -263,7 +310,13 @@ async function generateFAQ(
     faqExamples = "Examples: pricing, process/workflow, guarantees, timeline, what's included, support, payment terms";
   }
 
-  const prompt = `Generate a complete FAQ page for this ${businessType} business.
+  const prompt = `CRITICAL INSTRUCTIONS:
+- You are generating FAQs for a REAL ${businessType} business
+- This is NOT BalloonSight or an analysis tool
+- DO NOT mention "AI visibility", "BalloonSight", "analysis", or reporting services
+- Generate FAQs ONLY about the business itself - their services, offerings, policies, etc.
+
+Generate a complete FAQ page for this ${businessType} business.
 
 Website content:
 ${textContent.substring(0, 4000)}
@@ -272,11 +325,12 @@ ${existingFAQs.length > 0 ? `Existing FAQs found: ${JSON.stringify(existingFAQs)
 
 Generate MINIMUM 6 FAQ items that are:
 - Tailored to their industry (${businessType})
-- Relevant to their real offerings
+- Relevant to their real offerings (rooms, services, amenities, etc.)
 - Specific to their location (if mentioned)
 - Match their persona/brand
 - Common questions customers would ask
 ${faqExamples ? `- Include questions about: ${faqExamples}` : ""}
+- ABSOLUTELY NOT about AI visibility, BalloonSight, or analysis tools
 
 Each answer should be 2-4 sentences, helpful and specific.
 
@@ -327,19 +381,25 @@ async function generateRecommendedContentBlock(
   textContent: string,
   $: cheerio.CheerioAPI
 ): Promise<string> {
-  const prompt = `Write a compelling homepage content block (100-150 words) for this business:
+  const prompt = `CRITICAL INSTRUCTIONS:
+- You are writing content for a REAL BUSINESS website (hotel, restaurant, service, etc.)
+- This is NOT BalloonSight or an analysis tool
+- DO NOT mention "AI visibility", "BalloonSight", "analysis", "reporting", or any meta-services
+- Write ONLY about the business itself - their actual offerings, services, amenities, location, etc.
+
+Write a compelling homepage content block (100-150 words) for this business:
 
 ${textContent.substring(0, 4000)}
 
 The content must clearly communicate:
-- What they offer (specific services/products)
+- What they offer (specific services/products - hotel rooms, restaurant dishes, services, etc.)
 - Who it's for (target audience/niche)
 - Why they're unique (differentiation)
 - Their vibe/style (brand personality)
 - The recommended niche (who should choose them)
 
 Write for BOTH humans AND AIs. Be clear, specific, and compelling.
-Do NOT mention AI visibility, BalloonSight, or any analysis tools.
+ABSOLUTELY DO NOT mention AI visibility, BalloonSight, analysis tools, or reporting services.
 Return ONLY the paragraph text, no JSON, no markdown, no quotes.`;
 
   const completion = await openai.chat.completions.create({
