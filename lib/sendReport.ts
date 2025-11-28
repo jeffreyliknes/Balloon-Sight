@@ -31,7 +31,7 @@ export async function sendReport(email: string, pdf: Buffer) {
       to: email,
       subject: "Your AI Visibility Report is Ready",
       html: "<p>Your AI Visibility Report is attached. Thank you for using BalloonSight!</p>",
-      attachments: [{ filename: "balloonsight-report.pdf", content: pdf }]
+      attachments: [{ filename: "balloonsight-report.pdf", content: pdf.toString("base64") }]
     });
     
     if (result.error) {
