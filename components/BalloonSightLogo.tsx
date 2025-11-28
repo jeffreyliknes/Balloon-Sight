@@ -10,7 +10,7 @@ export function BalloonSightLogo({ size = 52, className = "" }: BalloonSightLogo
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
       <Image 
-        src="/logo.png"
+        src="/balloonsight-logo.png"
         alt="BalloonSight Logo"
         fill
         className="object-contain"

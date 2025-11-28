@@ -358,8 +358,10 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     }
     
     .badge-missing {
-      background: #fdeaea;
-      color: #a40000;
+      background: #ffe5e5;
+      color: #d32f2f;
+      font-weight: 700;
+      border: 1px solid #d32f2f;
     }
     
     .badge-partial {
@@ -369,7 +371,8 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     
     /* Closing Page */
     .page-closing {
-      background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
+      background: linear-gradient(180deg, #551121 0%, #3c0d18 100%);
+      color: white;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -395,7 +398,7 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
     
     .closing-message {
       font-size: 18px;
-      color: #333;
+      color: white;
       line-height: 1.8;
       max-width: 500px;
     }
@@ -756,10 +759,10 @@ ${JSON.stringify(data.orgSchema || generateDefaultOrgSchema(domain), null, 2)}
     </div>
     <div class="closing-divider"></div>
     <div class="closing-message">
-      <p style="font-family: 'Cormorant Garamond', 'Times New Roman', Georgia, serif; font-size: 28px; font-weight: 700; color: ${brandColor}; margin-bottom: 20px;">
+      <p style="font-family: 'Cormorant Garamond', 'Times New Roman', Georgia, serif; font-size: 28px; font-weight: 700; color: white; margin-bottom: 20px;">
         Thank you for using BalloonSight.
       </p>
-      <p style="font-size: 18px; color: #666; margin-top: 10px;">
+      <p style="font-size: 18px; color: rgba(255, 255, 255, 0.9); margin-top: 10px;">
         🎈 Your website is now more visible to AI systems.
       </p>
     </div>

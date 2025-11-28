@@ -3,7 +3,7 @@
 import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 
-export async function createCheckoutSession(priceId: string) {
+export async function createCheckoutSession(domain: string, amount: number = 1200, currency: string = "cad") {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
   try {
@@ -11,11 +11,19 @@ export async function createCheckoutSession(priceId: string) {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: currency,
+            product_data: {
+              name: "AI Visibility Report",
+              description: `Full AI visibility audit report for ${domain}`,
+            },
+            unit_amount: amount, // C$12.00 = 1200 cents
+          },
           quantity: 1,
         },
       ],
       mode: "payment",
+      client_reference_id: domain, // This is the key - pass domain here
       success_url: `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/payment/cancelled`,
     });

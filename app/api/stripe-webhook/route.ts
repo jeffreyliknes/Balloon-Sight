@@ -32,6 +32,13 @@ export async function POST(req: Request) {
     const domain = session.client_reference_id || session.metadata?.domain;
 
     console.log("✔ Payment received from", email, "for domain:", domain);
+    console.log("🔍 Session details:", {
+      hasClientReferenceId: !!session.client_reference_id,
+      hasMetadata: !!session.metadata,
+      clientReferenceId: session.client_reference_id,
+      metadata: session.metadata,
+      customerEmail: email
+    });
 
     if (domain && email) {
       try {
@@ -131,14 +138,38 @@ export async function POST(req: Request) {
         const pdf = await generatePdf(html);
 
         // 3. Send Email
-        await sendReport(email, pdf);
-
-        console.log("📤 PDF sent to", email);
+        try {
+          await sendReport(email, pdf);
+          console.log("📤 PDF sent to", email);
+        } catch (emailError: any) {
+          console.error("❌ Failed to send email:", emailError);
+          console.error("Email error details:", {
+            message: emailError.message,
+            stack: emailError.stack,
+            email,
+            hasResendKey: !!process.env.RESEND_API_KEY,
+            hasSenderEmail: !!process.env.REPORT_SENDER_EMAIL
+          });
+          // Don't throw - webhook should still return success even if email fails
+        }
       } catch (err) {
-        console.error("Failed to process report:", err);
+        console.error("❌ Failed to process report:", err);
+        console.error("Error details:", {
+          message: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+          domain,
+          email
+        });
       }
     } else {
-        console.error("Missing domain or email in session");
+        console.error("❌ Missing domain or email in session");
+        console.error("Session data:", {
+          hasDomain: !!domain,
+          hasEmail: !!email,
+          domain,
+          email,
+          sessionId: session.id
+        });
     }
   }
 

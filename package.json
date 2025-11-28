@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:stripe": "./scripts/setup-stripe-test.sh",
+    "stripe:webhook": "./scripts/start-stripe-webhook.sh"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

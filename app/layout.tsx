@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "BalloonSight",
     images: [
       {
-        url: "/logo.png",
+        url: "/balloonsight-logo.png",
         width: 800,
         height: 600,
         alt: "BalloonSight Logo",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BalloonSight | AI Visibility Optimization",
     description: "Analyze how well AI agents can read and understand your website.",
-    images: ["/logo.png"],
+    images: ["/balloonsight-logo.png"],
   },
 };
 
@@ -60,7 +60,7 @@ export default function RootLayout({
           "@type": "Organization",
           "name": "BalloonSight Inc.",
           "url": "https://balloonsight.com",
-          "logo": "https://balloonsight.com/logo.png"
+          "logo": "https://balloonsight.com/balloonsight-logo.png"
         }
       },
       {
@@ -95,7 +95,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${nunito.variable} ${fraunces.variable} font-sans min-h-screen bg-background text-foreground antialiased selection:bg-accent/20`}>
+      <body className={`${nunito.variable} ${fraunces.variable} font-sans min-h-screen bg-background text-foreground antialiased selection:bg-accent/20`} suppressHydrationWarning>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

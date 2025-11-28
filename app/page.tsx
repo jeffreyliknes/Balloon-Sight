@@ -13,6 +13,7 @@ import { Eye, Database, Layout, FileText, Sparkles, AlertCircle, ArrowRight, Loa
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import Image from "next/image";
 
 // --- Components ---
 
@@ -103,7 +104,7 @@ function HeroSection({
                  </motion.div>
             </div>
 
-            {/* Right Column: Image Placeholder */}
+            {/* Right Column: Logo Image */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -111,9 +112,15 @@ function HeroSection({
                 className="relative h-[500px] w-full hidden lg:block"
             >
                  <div className="absolute top-0 right-0 w-4/5 h-full bg-white/5 rounded-tl-[100px] rounded-br-[100px] overflow-hidden border-4 border-white/10 flex items-center justify-center">
-                     <div className="text-center p-8">
-                        <div className="text-9xl font-black text-white/10 mb-4">92</div>
-                        <div className="text-white/40 font-bold uppercase tracking-widest">AI Visibility Score</div>
+                     <div className="relative w-full h-full flex items-center justify-center p-8">
+                        <Image 
+                            src="/balloonsight-logo.png"
+                            alt="BalloonSight Logo"
+                            width={600}
+                            height={600}
+                            className="object-contain"
+                            priority
+                        />
                      </div>
                  </div>
             </motion.div>
@@ -707,7 +714,26 @@ export default function LandingPage() {
                                 Complete schema audit, metadata clarity score, persona analysis, crawlability check, brand distinctiveness score, and prioritized fixes by business impact—delivered as a professional PDF to your inbox.
                             </p>
                             <Button 
-                                onClick={() => window.location.href = `https://buy.stripe.com/eVq00j2At4qp2mB3uE0oM00?client_reference_id=${encodeURIComponent(result.url)}`}
+                                onClick={async () => {
+                                    // Use Checkout Session API to properly set client_reference_id
+                                    try {
+                                        const response = await fetch('/api/create-checkout', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ domain: result.url })
+                                        });
+                                        const data = await response.json();
+                                        if (data.url) {
+                                            window.location.href = data.url;
+                                        } else {
+                                            console.error('Failed to create checkout session:', data.error);
+                                            alert('Failed to start payment. Please try again.');
+                                        }
+                                    } catch (error) {
+                                        console.error('Error creating checkout session:', error);
+                                        alert('Failed to start payment. Please try again.');
+                                    }
+                                }}
                                 className="h-16 px-10 rounded-full bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
                                 Download Full Report — C$12
