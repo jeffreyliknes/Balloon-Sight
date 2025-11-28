@@ -104,7 +104,7 @@ function HeroSection({
                  </motion.div>
             </div>
 
-            {/* Right Column: Logo Image */}
+            {/* Right Column: Hero Image */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -112,13 +112,12 @@ function HeroSection({
                 className="relative h-[500px] w-full hidden lg:block"
             >
                  <div className="absolute top-0 right-0 w-4/5 h-full bg-white/5 rounded-tl-[100px] rounded-br-[100px] overflow-hidden border-4 border-white/10 flex items-center justify-center">
-                     <div className="relative w-full h-full flex items-center justify-center p-8">
+                     <div className="relative w-full h-full flex items-center justify-center">
                         <Image 
-                            src="/balloonsight-logo.png"
-                            alt="BalloonSight Logo"
-                            width={600}
-                            height={600}
-                            className="object-contain"
+                            src="/hero-travel-poster.png"
+                            alt="BalloonSight - Mountain landscape with hot air balloon"
+                            fill
+                            className="object-cover rounded-tl-[100px] rounded-br-[100px]"
                             priority
                         />
                      </div>

@@ -83,7 +83,7 @@ export default function TermsPage() {
                 <section>
                     <h2 className="text-2xl font-serif font-bold text-brand-primary mb-4">6. Refunds</h2>
                     <p>
-                        Refunds are only provided in cases of system error where the Service fails to deliver the purchased report. Refunds are not available for dissatisfaction with report content, scores, or recommendations. To request a refund due to system error, contact jeff.liknes@gmail.com within 7 days of purchase.
+                        Refunds are only provided in cases of system error where the Service fails to deliver the purchased report. Refunds are not available for dissatisfaction with report content, scores, or recommendations. To request a refund due to system error, contact team@balloonsight.com within 7 days of purchase.
                     </p>
                 </section>
 
@@ -175,7 +175,7 @@ export default function TermsPage() {
                         22 Cougar Ridge Bay SW<br />
                         Calgary, Alberta, T3H 5C4<br />
                         Canada<br />
-                        Email: jeff.liknes@gmail.com
+                        Email: team@balloonsight.com
                     </p>
                 </section>
             </div>

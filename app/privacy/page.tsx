@@ -182,7 +182,7 @@ export default function PrivacyPage() {
                     </ul>
 
                     <p>
-                        To exercise any of these rights, contact us at jeff.liknes@gmail.com. We will respond within 30 days.
+                        To exercise any of these rights, contact us at team@balloonsight.com. We will respond within 30 days.
                     </p>
                 </section>
 
@@ -204,7 +204,7 @@ export default function PrivacyPage() {
                 <section>
                     <h2 className="text-2xl font-serif font-bold text-brand-primary mb-4">10. How to Request Deletion</h2>
                     <p className="mb-4">
-                        To request deletion of your personal data (email address), send an email to jeff.liknes@gmail.com with the subject line "Data Deletion Request" and include:
+                        To request deletion of your personal data (email address), send an email to team@balloonsight.com with the subject line "Data Deletion Request" and include:
                     </p>
                     <ul className="list-disc pl-6 space-y-2 mb-4">
                         <li>Your email address associated with the account</li>
@@ -254,7 +254,7 @@ export default function PrivacyPage() {
                 <section>
                     <h2 className="text-2xl font-serif font-bold text-brand-primary mb-4">13. Children's Privacy</h2>
                     <p>
-                        BalloonSight is not intended for users under the age of 18. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at jeff.liknes@gmail.com, and we will delete such information.
+                        BalloonSight is not intended for users under the age of 18. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately at team@balloonsight.com, and we will delete such information.
                     </p>
                 </section>
 
@@ -290,7 +290,7 @@ export default function PrivacyPage() {
                         22 Cougar Ridge Bay SW<br />
                         Calgary, Alberta, T3H 5C4<br />
                         Canada<br />
-                        Email: jeff.liknes@gmail.com
+                        Email: team@balloonsight.com
                     </p>
                     <p className="mt-4">
                         For complaints under PIPEDA, you may also contact the Privacy Commissioner of Canada at <a href="https://www.priv.gc.ca" className="text-accent underline">www.priv.gc.ca</a>.
