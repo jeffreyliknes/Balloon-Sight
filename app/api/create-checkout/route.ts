@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { getBaseUrl } from "@/lib/utils";
+import { env } from "@/lib/env";
 
 export async function POST(req: Request) {
   try {
     const { domain } = await req.json();
+    
+    console.log("PRODUCTION MODE:", env.isProduction);
+    console.log("STRIPE PRICE ID:", env.stripePriceId);
+    console.log("BASE URL:", env.baseUrl);
+    console.log("Domain received:", domain);
     
     if (!domain) {
       return NextResponse.json(
@@ -13,28 +18,30 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!process.env.STRIPE_PRICE_ID) {
+    if (!env.stripePriceId) {
       return NextResponse.json(
         { error: "STRIPE_PRICE_ID is not configured" },
         { status: 500 }
       );
     }
-
-    const baseUrl = getBaseUrl();
+    
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID,
+          price: env.stripePriceId,
           quantity: 1,
         },
       ],
       client_reference_id: domain,
       metadata: { domain },
-      success_url: `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/payment/cancelled`,
+      success_url: `${env.baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.baseUrl}/payment/cancelled`,
     });
+
+    console.log("Checkout session created:", session.id);
+    console.log("Redirect URL:", session.url);
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {

@@ -1,25 +1,25 @@
 import { Resend } from "resend";
+import { env } from "./env";
 
 let resendInstance: Resend | null = null;
 
 function getResend(): Resend {
   if (!resendInstance) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
+    if (!env.resendApiKey) {
       throw new Error("Missing RESEND_API_KEY. Please set it in your environment variables.");
     }
-    resendInstance = new Resend(apiKey);
+    resendInstance = new Resend(env.resendApiKey);
   }
   return resendInstance;
 }
 
 export async function sendReport(email: string, pdf: Buffer) {
-  if (!process.env.RESEND_API_KEY) {
+  if (!env.resendApiKey) {
     console.error("❌ Missing RESEND_API_KEY");
     throw new Error("RESEND_API_KEY is required to send reports.");
   }
 
-  if (!process.env.REPORT_SENDER_EMAIL) {
+  if (!env.senderEmail) {
     console.error("❌ Missing REPORT_SENDER_EMAIL");
     throw new Error("REPORT_SENDER_EMAIL is required to send reports.");
   }
@@ -27,7 +27,7 @@ export async function sendReport(email: string, pdf: Buffer) {
   try {
     const resend = getResend();
     const result = await resend.emails.send({
-      from: `BalloonSight <${process.env.REPORT_SENDER_EMAIL}>`,
+      from: `BalloonSight <${env.senderEmail}>`,
       to: email,
       subject: "Your AI Visibility Report is Ready",
       html: "<p>Your AI Visibility Report is attached. Thank you for using BalloonSight!</p>",
@@ -46,7 +46,7 @@ export async function sendReport(email: string, pdf: Buffer) {
     console.log("✅ Email sent successfully:", {
       emailId: emailId || "unknown",
       to: email,
-      from: process.env.REPORT_SENDER_EMAIL
+      from: env.senderEmail
     });
     
     return result;
@@ -57,8 +57,8 @@ export async function sendReport(email: string, pdf: Buffer) {
       name: error.name,
       statusCode: error.statusCode,
       email,
-      hasResendKey: !!process.env.RESEND_API_KEY,
-      senderEmail: process.env.REPORT_SENDER_EMAIL
+      hasResendKey: !!env.resendApiKey,
+      senderEmail: env.senderEmail
     });
     throw error;
   }

@@ -1,14 +1,14 @@
 import Stripe from "stripe";
+import { env } from "./env";
 
 let stripeInstance: Stripe | null = null;
 
 function getStripeInstance(): Stripe {
   if (!stripeInstance) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) {
+    if (!env.stripeSecretKey) {
       throw new Error('STRIPE_SECRET_KEY is missing. Please set it in your environment variables.');
     }
-    stripeInstance = new Stripe(secretKey, {
+    stripeInstance = new Stripe(env.stripeSecretKey, {
       apiVersion: "2025-11-17.clover", // Stripe API version compatible with current SDK
       typescript: true,
     });

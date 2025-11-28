@@ -6,7 +6,7 @@ import { generateFullReport } from "@/lib/reportTemplate";
 import { sendReport } from "@/lib/sendReport";
 import { generateReportData } from "@/lib/generateReportData";
 import { analyzeHtml } from "@/actions/analyze-url";
-import { getBaseUrl } from "@/lib/utils";
+import { env } from "@/lib/env";
 import * as cheerio from "cheerio";
 
 export async function POST(req: Request) {
@@ -20,9 +20,13 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      env.stripeWebhookSecret
     );
+    
+    console.log("Webhook secret source:", env.isProduction ? "VERCEL (LIVE)" : ".env.local (TEST)");
+    console.log("Webhook event:", event.type);
   } catch (error: any) {
+    console.error("Webhook signature verification failed:", error.message);
     return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
   }
 
@@ -47,8 +51,7 @@ export async function POST(req: Request) {
         // 1. Run Full Analysis (Deep Scan)
         // Use /api/scrape endpoint for consistent fetching
         const domainUrl = domain.startsWith('http') ? domain : `https://${domain}`;
-        const baseUrl = getBaseUrl();
-        const scrapeUrl = `${baseUrl}/api/scrape?url=${encodeURIComponent(domainUrl)}`;
+        const scrapeUrl = `${env.baseUrl}/api/scrape?url=${encodeURIComponent(domainUrl)}`;
         
         const scrapeRes = await fetch(scrapeUrl);
         if (!scrapeRes.ok) {
@@ -146,8 +149,8 @@ export async function POST(req: Request) {
             message: emailError.message,
             stack: emailError.stack,
             email,
-            hasResendKey: !!process.env.RESEND_API_KEY,
-            hasSenderEmail: !!process.env.REPORT_SENDER_EMAIL
+            hasResendKey: !!env.resendApiKey,
+            hasSenderEmail: !!env.senderEmail
           });
           // Don't throw - webhook should still return success even if email fails
         }

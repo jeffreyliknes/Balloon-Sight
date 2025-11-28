@@ -717,6 +717,11 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-[#F6D6CA] font-sans selection:bg-accent/20 overflow-x-hidden">
+      {process.env.NODE_ENV === "development" && (
+        <div className="bg-yellow-500 text-black text-center py-2 font-bold">
+          TEST MODE ACTIVE — Stripe Test Payments Only
+        </div>
+      )}
       <Navbar />
       
       <HeroSection 
