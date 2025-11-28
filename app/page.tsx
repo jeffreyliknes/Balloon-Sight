@@ -14,7 +14,6 @@ import { Eye, Database, Layout, FileText, Sparkles, AlertCircle, ArrowRight, Loa
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import Image from "next/image";
 
 // --- Components ---
 
