@@ -1,10 +1,11 @@
 "use server";
 
 import { stripe } from "@/lib/stripe";
+import { getBaseUrl } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
 export async function createCheckoutSession(domain: string, amount: number = 1200, currency: string = "cad") {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   try {
     const session = await stripe.checkout.sessions.create({

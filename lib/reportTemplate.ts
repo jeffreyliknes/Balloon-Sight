@@ -42,8 +42,9 @@ export function generateFullReport(domain: string, data: Partial<ReportData> = {
   const score = data.score || 0;
   
   // Generate logo URL - use absolute URL for Puppeteer
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  const baseUrl = process.env.VERCEL === "1" 
+    ? (process.env.NEXT_PUBLIC_BASE_URL || `https://${process.env.VERCEL_URL || 'balloonsight.com'}`)
+    : (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000');
   const logoUrl = `${baseUrl}/balloonsight-logo.png`;
   
   // Extract persona data with defaults

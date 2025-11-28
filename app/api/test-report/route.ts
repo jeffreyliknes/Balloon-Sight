@@ -3,9 +3,13 @@ import { generatePdf } from "@/lib/pdf";
 import { generateFullReport } from "@/lib/reportTemplate";
 import { generateReportData } from "@/lib/generateReportData";
 import { analyzeHtml } from "@/actions/analyze-url";
+import { getBaseUrl } from "@/lib/utils";
 import * as cheerio from "cheerio";
 
-// Test route for local PDF generation testing
+/**
+ * Development-only route for testing PDF generation locally
+ * ⚠️ This route should be disabled or protected in production
+ */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const domain = searchParams.get("domain") || "example.com";
@@ -16,7 +20,7 @@ export async function GET(req: Request) {
     
     // Scrape the website
     const domainUrl = domain.startsWith('http') ? domain : `https://${domain}`;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getBaseUrl();
     const scrapeUrl = `${baseUrl}/api/scrape?url=${encodeURIComponent(domainUrl)}`;
     
     console.log("🧪 [test-report] Fetching from:", scrapeUrl);
