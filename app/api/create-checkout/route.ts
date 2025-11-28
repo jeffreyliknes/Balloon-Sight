@@ -3,6 +3,11 @@ import { createCheckoutSession } from "@/actions/create-checkout-session";
 
 export async function POST(req: Request) {
   try {
+    // Dev warning: Check if payment link env var is missing (for reference, though we use checkout sessions)
+    if (process.env.NODE_ENV === "development" && !process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL) {
+      console.warn("⚠️ Missing NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL env variable. (Note: This app uses checkout sessions, not payment links)");
+    }
+
     const { domain } = await req.json();
 
     if (!domain) {
