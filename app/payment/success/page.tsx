@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Download, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [isDownloading, setIsDownloading] = useState(false);
@@ -200,6 +200,24 @@ export default function SuccessPage() {
         </div>
       </motion.div>
     </main>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-brand-primary flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-white rounded-[40px] p-12 max-w-lg w-full shadow-2xl flex flex-col items-center">
+          <div className="mb-8 p-4 bg-brand-primary rounded-full">
+            <BalloonSightLogo size={80} />
+          </div>
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+          <p className="text-brand-primary/70 text-lg font-medium mt-4">Loading...</p>
+        </div>
+      </main>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
 

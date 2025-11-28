@@ -34,8 +34,17 @@ export async function sendReport(email: string, pdf: Buffer) {
       attachments: [{ filename: "balloonsight-report.pdf", content: pdf }]
     });
     
+    if (result.error) {
+      throw new Error(result.error.message || "Failed to send email");
+    }
+    
+    // Type-safe access to email ID
+    const emailId = result.data && typeof result.data === 'object' && 'id' in result.data 
+      ? (result.data as { id: string }).id 
+      : undefined;
+    
     console.log("✅ Email sent successfully:", {
-      emailId: result.id,
+      emailId: emailId || "unknown",
       to: email,
       from: process.env.REPORT_SENDER_EMAIL
     });
