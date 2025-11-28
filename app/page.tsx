@@ -140,7 +140,7 @@ function HeroSection({
                 transition={{ duration: 0.8 }}
                 className="relative h-[500px] w-full hidden lg:block"
             >
-                 <div className="absolute top-0 right-0 w-4/5 h-full bg-white/5 rounded-tl-[100px] rounded-br-[100px] overflow-hidden border-4 border-white/10 flex items-center justify-center">
+                 <div className="absolute top-0 right-0 w-4/5 h-full rounded-tl-[100px] rounded-br-[100px] overflow-hidden flex items-center justify-center">
                      <div className="relative w-full h-full flex items-center justify-center">
                         <HeroImage />
                      </div>
