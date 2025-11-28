@@ -625,6 +625,41 @@ function WhoItsForSection() {
     )
 }
 
+// Helper function to calculate score breakdown from analysis result
+function calculateScoreBreakdown(result: AnalysisResult) {
+  // Content Clarity - based on contentPersona category
+  const contentClarityScore = result.categories.contentPersona.score;
+  
+  // Schema Markup - based on structuredData category
+  const schemaScore = result.categories.structuredData.score;
+  
+  // Metadata Quality - check for title, meta description, OG tags in structuredData checks
+  const metaChecks = result.categories.structuredData.checks.filter(c => 
+    c.id.includes('meta') || c.id.includes('title') || c.id.includes('description') || c.id.includes('og')
+  );
+  const metadataScore = metaChecks.length > 0 
+    ? Math.round(metaChecks.reduce((acc, c) => acc + (c.status === 'pass' ? 100 : c.status === 'warning' ? 50 : 0), 0) / metaChecks.length)
+    : result.categories.structuredData.score;
+  
+  // AI Readability - based on semanticStructure category
+  const aiReadabilityScore = result.categories.semanticStructure.score;
+  
+  // Persona Alignment - based on contentPersona category (can be refined)
+  const personaAlignmentScore = result.categories.contentPersona.score;
+  
+  // Overall Score
+  const overallScore = result.score;
+  
+  return {
+    contentClarityScore,
+    schemaScore,
+    metadataScore,
+    aiReadabilityScore,
+    personaAlignmentScore,
+    overallScore
+  };
+}
+
 // --- Main Page Component ---
 // Updated with FAQ/Contact links
 export default function LandingPage() {
@@ -718,6 +753,125 @@ export default function LandingPage() {
                                 </div>
                             </Card>
                         </div>
+
+                        {/* Score Breakdown Section */}
+                        {(() => {
+                            const breakdown = calculateScoreBreakdown(result);
+                            return (
+                                <div className="bg-white p-8 rounded-2xl border-2 border-brand-primary/10">
+                                    <h3 className="text-2xl font-serif font-bold text-brand-primary mb-6">Detailed breakdown of your AI visibility score across key dimensions</h3>
+                                    <div className="space-y-5">
+                                        {/* Content Clarity */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold">Content Clarity</span>
+                                                <span className="text-brand-primary font-bold">{breakdown.contentClarityScore}%</span>
+                                            </div>
+                                            <div className="w-full h-8 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-3 transition-all duration-500"
+                                                    style={{ width: `${breakdown.contentClarityScore}%` }}
+                                                >
+                                                    {breakdown.contentClarityScore > 10 && (
+                                                        <span className="text-white text-sm font-bold">{breakdown.contentClarityScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Schema Markup */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold">Schema Markup</span>
+                                                <span className="text-brand-primary font-bold">{breakdown.schemaScore}%</span>
+                                            </div>
+                                            <div className="w-full h-8 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-3 transition-all duration-500"
+                                                    style={{ width: `${breakdown.schemaScore}%` }}
+                                                >
+                                                    {breakdown.schemaScore > 10 && (
+                                                        <span className="text-white text-sm font-bold">{breakdown.schemaScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Metadata Quality */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold">Metadata Quality</span>
+                                                <span className="text-brand-primary font-bold">{breakdown.metadataScore}%</span>
+                                            </div>
+                                            <div className="w-full h-8 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-3 transition-all duration-500"
+                                                    style={{ width: `${breakdown.metadataScore}%` }}
+                                                >
+                                                    {breakdown.metadataScore > 10 && (
+                                                        <span className="text-white text-sm font-bold">{breakdown.metadataScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* AI Readability */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold">AI Readability</span>
+                                                <span className="text-brand-primary font-bold">{breakdown.aiReadabilityScore}%</span>
+                                            </div>
+                                            <div className="w-full h-8 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-3 transition-all duration-500"
+                                                    style={{ width: `${breakdown.aiReadabilityScore}%` }}
+                                                >
+                                                    {breakdown.aiReadabilityScore > 10 && (
+                                                        <span className="text-white text-sm font-bold">{breakdown.aiReadabilityScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Persona Alignment */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold">Persona Alignment</span>
+                                                <span className="text-brand-primary font-bold">{breakdown.personaAlignmentScore}%</span>
+                                            </div>
+                                            <div className="w-full h-8 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-3 transition-all duration-500"
+                                                    style={{ width: `${breakdown.personaAlignmentScore}%` }}
+                                                >
+                                                    {breakdown.personaAlignmentScore > 10 && (
+                                                        <span className="text-white text-sm font-bold">{breakdown.personaAlignmentScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Overall Score */}
+                                        <div className="pt-4 border-t border-brand-primary/10">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-brand-primary font-semibold text-lg">Overall Score</span>
+                                                <span className="text-brand-primary font-bold text-lg">{breakdown.overallScore}%</span>
+                                            </div>
+                                            <div className="w-full h-10 bg-brand-primary/10 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-[#551121] to-[#C97A5F] flex items-center justify-end pr-4 transition-all duration-500"
+                                                    style={{ width: `${breakdown.overallScore}%` }}
+                                                >
+                                                    {breakdown.overallScore > 10 && (
+                                                        <span className="text-white text-base font-bold">{breakdown.overallScore}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Free Preview Notice */}
                         <div className="bg-brand-primary/5 p-6 rounded-2xl border-2 border-brand-primary/10 text-center">
