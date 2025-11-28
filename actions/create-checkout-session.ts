@@ -4,7 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { getBaseUrl } from "@/lib/utils";
 import { redirect } from "next/navigation";
 
-export async function createCheckoutSession(domain: string, amount: number = 1200, currency: string = "cad") {
+export async function createCheckoutSession(domain: string, amount: number = 1600, currency: string = "cad") {
   const baseUrl = getBaseUrl();
 
   try {
@@ -18,7 +18,7 @@ export async function createCheckoutSession(domain: string, amount: number = 120
               name: "AI Visibility Report",
               description: `Full AI visibility audit report for ${domain}`,
             },
-            unit_amount: amount, // C$12.00 = 1200 cents
+            unit_amount: amount, // C$16.00 = 1600 cents
           },
           quantity: 1,
         },

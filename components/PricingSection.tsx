@@ -11,14 +11,14 @@ export function PricingSection() {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6">Pay per insight</h2>
           <p className="text-lg font-medium opacity-80 max-w-2xl mx-auto">
-            Free scan. C$12 for the full PDF report. No subscription. No commitment. Just actionable insights when you need them.
+            Free scan. C$16 for the full PDF report. No subscription. No commitment. Just actionable insights when you need them.
           </p>
         </div>
 
         <div className="max-w-md mx-auto">
           <div className="bg-white p-10 rounded-2xl border-4 border-secondary shadow-xl flex flex-col text-center">
             <div className="mb-8">
-              <div className="text-5xl font-black text-brand-primary mb-2">C$12</div>
+              <div className="text-5xl font-black text-brand-primary mb-2">C$16</div>
               <p className="text-sm opacity-70 font-medium">One-time scan</p>
             </div>
             <ul className="space-y-4 mb-8 text-left">

@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Do I need to pay to scan my website?",
-    a: "No. The initial scan is free. You get your AI Visibility Score (0-100) and persona analysis instantly. Pay C$12 only if you want the full PDF report with detailed breakdowns, prioritized fixes, and actionable recommendations."
+    a: "No. The initial scan is free. You get your AI Visibility Score (0-100) and persona analysis instantly. Pay C$16 only if you want the full PDF report with detailed breakdowns, prioritized fixes, and actionable recommendations."
   },
   {
     q: "How long does the report take?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: "Can I scan multiple sites?",
-    a: "Yes. Each scan is C$12. Scan as many sites as you need. No subscription, no limits. Pay per insight."
+    a: "Yes. Each scan is C$16. Scan as many sites as you need. No subscription, no limits. Pay per insight."
   }
 ];
 

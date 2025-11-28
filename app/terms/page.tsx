@@ -70,7 +70,7 @@ export default function TermsPage() {
                 <section>
                     <h2 className="text-2xl font-serif font-bold text-brand-primary mb-4">5. Pricing & Payments</h2>
                     <p className="mb-4">
-                        The free scan provides your AI Visibility Score and persona analysis at no cost. Full PDF reports are available for purchase at C$12 CAD per scan.
+                        The free scan provides your AI Visibility Score and persona analysis at no cost. Full PDF reports are available for purchase at C$16 CAD per scan.
                     </p>
                     <p className="mb-4">
                         All payments are processed through Stripe, a third-party payment processor. By purchasing a report, you agree to Stripe's terms of service. BalloonSight does not store, process, or have access to your credit card information.

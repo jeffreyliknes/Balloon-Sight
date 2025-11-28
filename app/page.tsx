@@ -254,7 +254,7 @@ function HowItWorksSection() {
                      >
                          <div className="w-20 h-20 rounded-full bg-accent text-white flex items-center justify-center text-3xl font-black mx-auto mb-6">3</div>
                          <h3 className="text-2xl font-serif font-bold mb-4">Download PDF</h3>
-                         <p className="text-brand-primary/70 font-medium">Pay C$12 for the full report. Get prioritized fixes, technical audits, and recommendations—delivered to your inbox.</p>
+                         <p className="text-brand-primary/70 font-medium">Pay C$16 for the full report. Get prioritized fixes, technical audits, and recommendations—delivered to your inbox.</p>
                      </motion.div>
                  </div>
             </div>
@@ -735,7 +735,7 @@ export default function LandingPage() {
                                 }}
                                 className="h-16 px-10 rounded-full bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
-                                Download Full Report — C$12
+                                Download Full Report — C$16
                             </Button>
                             <p className="mt-4 text-sm text-brand-primary/50 font-bold uppercase tracking-widest">One-time payment • Instant delivery</p>
                         </div>
