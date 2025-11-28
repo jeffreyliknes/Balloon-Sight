@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import { analyzeHtml } from "@/actions/analyze-url";
 import { AnalysisResult } from "@/lib/types";
 import { ScoreGauge } from "@/components/ScoreGauge";
@@ -16,6 +17,35 @@ import { Footer } from "@/components/Footer";
 import Image from "next/image";
 
 // --- Components ---
+
+function HeroImage() {
+  const [imgError, setImgError] = useState(false);
+  
+  if (imgError) {
+    // Fallback to logo if hero image fails to load
+    return (
+      <Image 
+        src="/balloonsight-logo.png"
+        alt="BalloonSight Logo"
+        width={600}
+        height={600}
+        className="object-contain"
+        priority
+      />
+    );
+  }
+  
+  return (
+    <Image 
+      src="/hero-travel-poster.png"
+      alt="BalloonSight - Mountain landscape with hot air balloon"
+      fill
+      className="object-cover rounded-tl-[100px] rounded-br-[100px]"
+      priority
+      onError={() => setImgError(true)}
+    />
+  );
+}
 
 function HeroSection({ 
     url, 
@@ -113,13 +143,7 @@ function HeroSection({
             >
                  <div className="absolute top-0 right-0 w-4/5 h-full bg-white/5 rounded-tl-[100px] rounded-br-[100px] overflow-hidden border-4 border-white/10 flex items-center justify-center">
                      <div className="relative w-full h-full flex items-center justify-center">
-                        <Image 
-                            src="/hero-travel-poster.png"
-                            alt="BalloonSight - Mountain landscape with hot air balloon"
-                            fill
-                            className="object-cover rounded-tl-[100px] rounded-br-[100px]"
-                            priority
-                        />
+                        <HeroImage />
                      </div>
                  </div>
             </motion.div>
