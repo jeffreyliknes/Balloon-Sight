@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Image from "next/image";
 import { analyzeHtml } from "@/actions/analyze-url";
 import { AnalysisResult } from "@/lib/types";
@@ -668,6 +668,19 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Add page reload detection
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      console.warn("PAGE RELOADED — BUTTON MAY BE TRIGGERING NAVIGATION");
+    };
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   const handleAnalyze = () => {
     if (!url) return;
     if (!url.startsWith("http")) {
@@ -888,7 +901,15 @@ export default function LandingPage() {
                                 Complete schema audit, metadata clarity score, persona analysis, crawlability check, brand distinctiveness score, and prioritized fixes by business impact—delivered as a professional PDF to your inbox.
                             </p>
                             <Button 
-                                onClick={async () => {
+                                id="download-report-button"
+                                type="button"
+                                onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    console.log("CLICKED DOWNLOAD BUTTON");
+                                    console.log("STARTING CREATE CHECKOUT");
+                                    
                                     try {
                                         const response = await fetch("/api/create-checkout", {
                                             method: "POST",
@@ -897,15 +918,23 @@ export default function LandingPage() {
                                         });
                                         
                                         if (!response.ok) {
-                                            const error = await response.json().catch(() => ({ error: "Failed to create checkout session" }));
-                                            alert(error.error || "Failed to start payment. Please try again.");
+                                            const errorText = await response.text();
+                                            console.error("CREATE CHECKOUT FAILED", errorText);
+                                            try {
+                                                const errorJson = JSON.parse(errorText);
+                                                alert(errorJson.error || "Failed to start payment. Please try again.");
+                                            } catch {
+                                                alert(errorText || "Failed to start payment. Please try again.");
+                                            }
                                             return;
                                         }
                                         
                                         const data = await response.json();
-                                        if (data.url) {
+                                        if (data?.url) {
+                                            console.log("REDIRECTING TO STRIPE:", data.url);
                                             window.location.href = data.url;
                                         } else {
+                                            console.error("NO URL RETURNED FROM CHECKOUT");
                                             alert("Invalid response from server. Please try again.");
                                         }
                                     } catch (error) {
