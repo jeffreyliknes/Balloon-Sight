@@ -34,16 +34,16 @@ function HeroImage() {
     );
   }
   
-  return (
-    <Image 
-      src="/hero-travel-poster.png"
-      alt="BalloonSight - Mountain landscape with hot air balloon"
-      fill
-      className="object-cover rounded-tl-[100px] rounded-br-[100px]"
-      priority
-      onError={() => setImgError(true)}
-    />
-  );
+      return (
+        <Image 
+          src="/hero-travel-poster.png"
+          alt="BalloonSight - Mountain landscape with hot air balloon"
+          fill
+          className="object-cover object-top"
+          priority
+          onError={() => setImgError(true)}
+        />
+      );
 }
 
 function HeroSection({ 
@@ -138,12 +138,10 @@ function HeroSection({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8 }}
-                className="relative h-[500px] w-full hidden lg:block"
+                className="relative h-[600px] w-full hidden lg:block"
             >
-                 <div className="absolute top-0 right-0 w-4/5 h-full rounded-tl-[100px] rounded-br-[100px] overflow-hidden flex items-center justify-center">
-                     <div className="relative w-full h-full flex items-center justify-center">
-                        <HeroImage />
-                     </div>
+                 <div className="relative w-full h-full flex items-start justify-center overflow-hidden">
+                    <HeroImage />
                  </div>
             </motion.div>
        </div>
@@ -736,21 +734,30 @@ export default function LandingPage() {
                                 Complete schema audit, metadata clarity score, persona analysis, crawlability check, brand distinctiveness score, and prioritized fixes by business impact—delivered as a professional PDF to your inbox.
                             </p>
                             <Button 
-                                onClick={() => {
-                                    // Use Payment Link from environment variable
-                                    const paymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL;
-                                    
-                                    if (!paymentLink) {
-                                        if (process.env.NODE_ENV === "development") {
-                                            console.warn("⚠️ Missing NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL");
+                                onClick={async () => {
+                                    try {
+                                        const response = await fetch("/api/create-checkout", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ domain: result.url }),
+                                        });
+                                        
+                                        if (!response.ok) {
+                                            const error = await response.json().catch(() => ({ error: "Failed to create checkout session" }));
+                                            alert(error.error || "Failed to start payment. Please try again.");
+                                            return;
                                         }
-                                        alert('Payment link not configured. Please contact support.');
-                                        return;
+                                        
+                                        const data = await response.json();
+                                        if (data.url) {
+                                            window.location.href = data.url;
+                                        } else {
+                                            alert("Invalid response from server. Please try again.");
+                                        }
+                                    } catch (error) {
+                                        console.error("Error creating checkout:", error);
+                                        alert("Network error. Please check your connection and try again.");
                                     }
-                                    
-                                    // Append domain as client_reference_id parameter for Payment Link
-                                    const domainParam = `?client_reference_id=${encodeURIComponent(result.url)}`;
-                                    window.location.href = paymentLink + domainParam;
                                 }}
                                 className="h-16 px-10 rounded-full bg-accent hover:bg-accent/90 text-white text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1"
                             >
