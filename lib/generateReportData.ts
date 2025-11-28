@@ -70,18 +70,28 @@ export async function generateReportData(
     console.log("✅ [generateReportData] Persona generated:", personaData);
     
     console.log("✅ [generateReportData] Generating content pack, FAQ, and recommended content...");
+    // Calculate score and score breakdown
+    const score = await calculateScore(textContent, $, metadata, technical);
+    const scoreBreakdown = calculateScoreBreakdown(textContent, $, metadata, technical);
+    
     // Then generate remaining content in parallel
-    const [contentPack, faqData, recommendedContent, score] = await Promise.all([
+    const [contentPack, faqData, recommendedContent, aiInsights, keywordIntent, trustEAT] = await Promise.all([
       generateContentPack(openai, textContent, $, metadata, personaData),
       generateFAQ(openai, textContent, $),
       generateRecommendedContentBlock(openai, textContent, $),
-      calculateScore(textContent, $, metadata, technical)
+      generateAIVisibilityInsights(openai, textContent, metadata),
+      generateKeywordIntent(openai, textContent, metadata),
+      generateTrustEAT(openai, textContent, metadata, $)
     ]);
+    
+    // Generate quick wins (synchronous)
+    const quickWins = generateQuickWins(textContent, $, metadata, technical);
     
     console.log("✅ [generateReportData] Content generated:", {
       h1: contentPack.h1?.substring(0, 50),
       faqCount: faqData.items.length,
-      score
+      score,
+      scoreBreakdown: scoreBreakdown.overallScore
     });
 
     // Generate schemas
@@ -100,7 +110,12 @@ export async function generateReportData(
       faqSchema,
       orgSchema,
       recommendedContentBlock: recommendedContent,
-      technical: technicalFormatted
+      technical: technicalFormatted,
+      scoreBreakdown,
+      aiVisibilityInsights: aiInsights,
+      keywordIntent,
+      trustEAT,
+      quickWins
     };
   } catch (error) {
     console.error("❌ [generateReportData] Error generating AI content:", error);
@@ -552,6 +567,366 @@ function generateFAQSchema(faqItems: Array<{ question: string; answer: string }>
   };
 }
 
+// --- New Generation Functions ---
+
+function calculateScoreBreakdown(
+  textContent: string,
+  $: cheerio.CheerioAPI,
+  metadata: Metadata,
+  technical: TechnicalInput
+): {
+  contentClarityScore: number;
+  schemaScore: number;
+  metadataScore: number;
+  aiReadabilityScore: number;
+  personaAlignmentScore: number;
+  overallScore: number;
+} {
+  // Content Clarity Score (0-100)
+  let contentClarityScore = 0;
+  const hasTitle = !!metadata.title;
+  const hasMetaDesc = !!metadata.metaDescription;
+  const hasH1 = $("h1").length > 0;
+  const h1Quality = hasH1 && $("h1").first().text().trim().length > 10 ? 1 : 0;
+  const hasH2s = $("h2").length >= 3;
+  contentClarityScore = (hasTitle ? 25 : 0) + (hasMetaDesc ? 25 : 0) + (hasH1 ? 25 : 0) + (hasH2s ? 25 : 0);
+
+  // Schema Score (0-100)
+  let schemaScore = 0;
+  if (technical.schema === "OK") schemaScore = 100;
+  else if (technical.schema === "Partial") schemaScore = 50;
+  else schemaScore = 0;
+
+  // Metadata Score (0-100)
+  let metadataScore = 0;
+  const hasTitleTag = !!metadata.title;
+  const hasMetaDescription = !!metadata.metaDescription;
+  const hasOGTags = $('meta[property^="og:"]').length > 0;
+  metadataScore = (hasTitleTag ? 40 : 0) + (hasMetaDescription ? 40 : 0) + (hasOGTags ? 20 : 0);
+
+  // AI Readability Score (0-100)
+  let aiReadabilityScore = 0;
+  const semanticTags = ["article", "main", "nav", "aside", "section"].filter(tag => $(tag).length > 0).length;
+  const textToHtmlRatio = textContent.length / ($("html").html()?.length || 1);
+  const hasStructuredHeadings = $("h1").length > 0 && $("h2").length >= 2;
+  aiReadabilityScore = Math.min(semanticTags * 20, 40) + Math.min(Math.floor(textToHtmlRatio * 100), 30) + (hasStructuredHeadings ? 30 : 0);
+
+  // Persona Alignment Score (0-100)
+  let personaAlignmentScore = 0;
+  const hasValueProp = /value|benefit|solution|problem|help|serve/i.test(textContent);
+  const hasAudience = /for|target|audience|customers|clients/i.test(textContent);
+  const hasClearPositioning = /unique|different|best|leading|specialized/i.test(textContent);
+  personaAlignmentScore = (hasValueProp ? 35 : 0) + (hasAudience ? 35 : 0) + (hasClearPositioning ? 30 : 0);
+
+  // Overall Score (average)
+  const overallScore = Math.round(
+    (contentClarityScore + schemaScore + metadataScore + aiReadabilityScore + personaAlignmentScore) / 5
+  );
+
+  return {
+    contentClarityScore: Math.min(Math.max(contentClarityScore, 0), 100),
+    schemaScore: Math.min(Math.max(schemaScore, 0), 100),
+    metadataScore: Math.min(Math.max(metadataScore, 0), 100),
+    aiReadabilityScore: Math.min(Math.max(aiReadabilityScore, 0), 100),
+    personaAlignmentScore: Math.min(Math.max(personaAlignmentScore, 0), 100),
+    overallScore: Math.min(Math.max(overallScore, 0), 100)
+  };
+}
+
+async function generateAIVisibilityInsights(
+  openai: OpenAI,
+  textContent: string,
+  metadata: Metadata
+): Promise<{
+  aiInterpretation: string;
+  valuePropositionClarity: string;
+  intentCommunication: string;
+  ambiguityDetected: string;
+  summarizationEase: string;
+}> {
+  const prompt = `Analyze this website content for AI visibility:
+
+Title: ${metadata.title || "Not provided"}
+Description: ${metadata.metaDescription || "Not provided"}
+Content: ${textContent.substring(0, 3000)}
+
+Provide analysis in JSON format with these keys:
+- aiInterpretation: How well do AI systems interpret this website? (2-3 sentences)
+- valuePropositionClarity: How clear is the value proposition? (2-3 sentences)
+- intentCommunication: How effectively does the content communicate user intent? (2-3 sentences)
+- ambiguityDetected: What ambiguities or unclear elements exist? (2-3 sentences)
+- summarizationEase: How easy is it for AI to summarize this content? (2-3 sentences)
+
+Return ONLY valid JSON, no markdown.`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are an AI visibility analyst. Analyze websites and provide insights. Return only valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7
+    });
+
+    const data = JSON.parse(completion.choices[0].message.content || "{}");
+    return {
+      aiInterpretation: data.aiInterpretation || "AI systems can interpret this website with moderate clarity.",
+      valuePropositionClarity: data.valuePropositionClarity || "The value proposition needs more clarity.",
+      intentCommunication: data.intentCommunication || "User intent communication could be improved.",
+      ambiguityDetected: data.ambiguityDetected || "Some ambiguous elements were detected.",
+      summarizationEase: data.summarizationEase || "Content can be summarized with moderate ease."
+    };
+  } catch {
+    return {
+      aiInterpretation: "AI systems can interpret this website with moderate clarity.",
+      valuePropositionClarity: "The value proposition needs more clarity.",
+      intentCommunication: "User intent communication could be improved.",
+      ambiguityDetected: "Some ambiguous elements were detected.",
+      summarizationEase: "Content can be summarized with moderate ease."
+    };
+  }
+}
+
+async function generateKeywordIntent(
+  openai: OpenAI,
+  textContent: string,
+  metadata: Metadata
+): Promise<{
+  primaryIntent: string;
+  secondaryIntent: string;
+  recommendedKeywords: string[];
+  contentWeaknesses: string[];
+}> {
+  const prompt = `Analyze this website for keyword intent and content weaknesses:
+
+Title: ${metadata.title || "Not provided"}
+Description: ${metadata.metaDescription || "Not provided"}
+Content: ${textContent.substring(0, 3000)}
+
+Provide analysis in JSON format with these keys:
+- primaryIntent: The main user intent this website serves (1 sentence)
+- secondaryIntent: A secondary user intent (1 sentence)
+- recommendedKeywords: Array of exactly 5 keywords that AI agents should use when recommending this site
+- contentWeaknesses: Array of exactly 5 specific content weaknesses that need improvement
+
+Return ONLY valid JSON, no markdown.`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a keyword and content strategist. Analyze websites and provide recommendations. Return only valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7
+    });
+
+    const data = JSON.parse(completion.choices[0].message.content || "{}");
+    return {
+      primaryIntent: data.primaryIntent || "Users seeking information about services",
+      secondaryIntent: data.secondaryIntent || "Users looking for contact information",
+      recommendedKeywords: Array.isArray(data.recommendedKeywords) && data.recommendedKeywords.length >= 5
+        ? data.recommendedKeywords.slice(0, 5)
+        : ["service", "solution", "professional", "quality", "expert"],
+      contentWeaknesses: Array.isArray(data.contentWeaknesses) && data.contentWeaknesses.length >= 5
+        ? data.contentWeaknesses.slice(0, 5)
+        : ["Missing clear value proposition", "Insufficient keyword optimization", "Weak meta descriptions", "Limited schema markup", "Unclear target audience"]
+    };
+  } catch {
+    return {
+      primaryIntent: "Users seeking information about services",
+      secondaryIntent: "Users looking for contact information",
+      recommendedKeywords: ["service", "solution", "professional", "quality", "expert"],
+      contentWeaknesses: ["Missing clear value proposition", "Insufficient keyword optimization", "Weak meta descriptions", "Limited schema markup", "Unclear target audience"]
+    };
+  }
+}
+
+async function generateTrustEAT(
+  openai: OpenAI,
+  textContent: string,
+  metadata: Metadata,
+  $: cheerio.CheerioAPI
+): Promise<{
+  authoritativenessScore: number;
+  trustSignalsScore: number;
+  contentFreshnessScore: number;
+  uxClarityScore: number;
+  issuesExplanation: string;
+}> {
+  // Calculate scores based on content analysis
+  let authoritativenessScore = 50;
+  let trustSignalsScore = 50;
+  let contentFreshnessScore = 50;
+  let uxClarityScore = 50;
+
+  // Authoritativeness: Check for credentials, expertise signals
+  const hasCredentials = /certified|licensed|accredited|expert|professional|degree|certification/i.test(textContent);
+  const hasExperience = /years|experience|established|since|founded/i.test(textContent);
+  authoritativenessScore = (hasCredentials ? 30 : 0) + (hasExperience ? 30 : 0) + 40;
+
+  // Trust Signals: Check for reviews, contact info, social proof
+  const hasContactInfo = /contact|phone|email|address/i.test(textContent);
+  const hasReviews = /review|rating|testimonial|client|customer/i.test(textContent);
+  const hasSocialLinks = $('a[href*="facebook"], a[href*="twitter"], a[href*="linkedin"]').length > 0;
+  trustSignalsScore = (hasContactInfo ? 35 : 0) + (hasReviews ? 35 : 0) + (hasSocialLinks ? 30 : 0);
+
+  // Content Freshness: Check for dates, updates
+  const hasDates = /\d{4}|\d{1,2}\/\d{1,2}\/\d{4}|updated|recent|new|latest/i.test(textContent);
+  contentFreshnessScore = hasDates ? 70 : 30;
+
+  // UX Clarity: Check for clear navigation, structure
+  const hasNav = $("nav").length > 0;
+  const hasFooter = $("footer").length > 0;
+  const hasClearHeadings = $("h1").length > 0 && $("h2").length >= 2;
+  uxClarityScore = (hasNav ? 30 : 0) + (hasFooter ? 20 : 0) + (hasClearHeadings ? 50 : 0);
+
+  const prompt = `Analyze this website for E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness):
+
+Content: ${textContent.substring(0, 2000)}
+
+Provide a paragraph (3-4 sentences) explaining the main trust and E-E-A-T issues and recommendations.
+Return ONLY the paragraph text, no JSON, no markdown, no quotes.`;
+
+  let issuesExplanation = "";
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a trust and E-E-A-T analyst. Analyze websites and provide recommendations. Return only the paragraph text." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 200
+    });
+    issuesExplanation = completion.choices[0].message.content?.trim() || "";
+  } catch {
+    issuesExplanation = "The website shows moderate trust signals. Consider adding more credentials, testimonials, and clear contact information to improve E-E-A-T scores.";
+  }
+
+  if (!issuesExplanation) {
+    issuesExplanation = "The website shows moderate trust signals. Consider adding more credentials, testimonials, and clear contact information to improve E-E-A-T scores.";
+  }
+
+  return {
+    authoritativenessScore: Math.min(Math.max(authoritativenessScore, 0), 100),
+    trustSignalsScore: Math.min(Math.max(trustSignalsScore, 0), 100),
+    contentFreshnessScore: Math.min(Math.max(contentFreshnessScore, 0), 100),
+    uxClarityScore: Math.min(Math.max(uxClarityScore, 0), 100),
+    issuesExplanation
+  };
+}
+
+function generateQuickWins(
+  textContent: string,
+  $: cheerio.CheerioAPI,
+  metadata: Metadata,
+  technical: TechnicalInput
+): Array<{
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+}> {
+  const quickWins: Array<{ title: string; description: string; priority: 'high' | 'medium' | 'low' }> = [];
+
+  // High Priority
+  if (!metadata.metaDescription) {
+    quickWins.push({
+      title: "Add Meta Description",
+      description: "Create a compelling 150-160 character meta description that clearly communicates your value proposition.",
+      priority: "high"
+    });
+  }
+
+  if (technical.schema === "Missing") {
+    quickWins.push({
+      title: "Add FAQ Schema",
+      description: "Implement FAQPage schema markup to help AI systems understand your frequently asked questions.",
+      priority: "high"
+    });
+  }
+
+  if ($("h1").length === 0 || $("h1").first().text().trim().length < 10) {
+    quickWins.push({
+      title: "Strengthen H1 Tag",
+      description: "Ensure you have a clear, descriptive H1 tag that communicates your main value proposition.",
+      priority: "high"
+    });
+  }
+
+  // Medium Priority
+  if ($("h2").length < 3) {
+    quickWins.push({
+      title: "Add More H2 Headings",
+      description: "Add at least 3-5 H2 headings to create better content structure and hierarchy.",
+      priority: "medium"
+    });
+  }
+
+  if ($('img[alt=""]').length > 0 || $('img:not([alt])').length > 0) {
+    quickWins.push({
+      title: "Improve Image ALT Tags",
+      description: "Add descriptive ALT text to all images to improve accessibility and AI understanding.",
+      priority: "medium"
+    });
+  }
+
+  if (technical.sitemap === "Missing") {
+    quickWins.push({
+      title: "Add Sitemap.xml",
+      description: "Create and submit a sitemap.xml file to help search engines and AI crawlers discover all your pages.",
+      priority: "medium"
+    });
+  }
+
+  if ($('a[href^="/"]').length < 5) {
+    quickWins.push({
+      title: "Add Internal Links",
+      description: "Add more internal links between related pages to improve site structure and navigation.",
+      priority: "medium"
+    });
+  }
+
+  // Low Priority
+  if (!metadata.title || metadata.title.length < 30) {
+    quickWins.push({
+      title: "Optimize Page Title",
+      description: "Ensure your page title is 50-60 characters and includes your primary keyword.",
+      priority: "low"
+    });
+  }
+
+  if ($('meta[property^="og:"]').length === 0) {
+    quickWins.push({
+      title: "Add Open Graph Tags",
+      description: "Add Open Graph meta tags for better social media sharing and AI understanding.",
+      priority: "low"
+    });
+  }
+
+  if ($('a[href*="about"]').length === 0) {
+    quickWins.push({
+      title: "Improve About Page",
+      description: "Create or enhance your About page with clear information about your expertise and credentials.",
+      priority: "low"
+    });
+  }
+
+  // Ensure we have exactly 10 items
+  while (quickWins.length < 10) {
+    quickWins.push({
+      title: "Review Content Quality",
+      description: "Regularly review and update your content to ensure it remains fresh and relevant.",
+      priority: "low"
+    });
+  }
+
+  return quickWins.slice(0, 10);
+}
+
 // --- Score Calculation ---
 
 async function calculateScore(
@@ -700,6 +1075,46 @@ function generateFallbackReportData(
       "sameAs": []
     },
     recommendedContentBlock: "We provide exceptional services tailored to your needs. Our team is dedicated to delivering results that exceed expectations.",
-    technical
+    technical,
+    scoreBreakdown: {
+      contentClarityScore: 50,
+      schemaScore: 50,
+      metadataScore: 50,
+      aiReadabilityScore: 50,
+      personaAlignmentScore: 50,
+      overallScore: 50
+    },
+    aiVisibilityInsights: {
+      aiInterpretation: "AI systems can interpret this website with moderate clarity.",
+      valuePropositionClarity: "The value proposition needs more clarity.",
+      intentCommunication: "User intent communication could be improved.",
+      ambiguityDetected: "Some ambiguous elements were detected.",
+      summarizationEase: "Content can be summarized with moderate ease."
+    },
+    keywordIntent: {
+      primaryIntent: "Users seeking information about services",
+      secondaryIntent: "Users looking for contact information",
+      recommendedKeywords: ["service", "solution", "professional", "quality", "expert"],
+      contentWeaknesses: ["Missing clear value proposition", "Insufficient keyword optimization", "Weak meta descriptions", "Limited schema markup", "Unclear target audience"]
+    },
+    trustEAT: {
+      authoritativenessScore: 50,
+      trustSignalsScore: 50,
+      contentFreshnessScore: 50,
+      uxClarityScore: 50,
+      issuesExplanation: "The website shows moderate trust signals. Consider adding more credentials, testimonials, and clear contact information to improve E-E-A-T scores."
+    },
+    quickWins: [
+      { title: "Add Meta Description", description: "Create a compelling 150-160 character meta description.", priority: "high" },
+      { title: "Add FAQ Schema", description: "Implement FAQPage schema markup.", priority: "high" },
+      { title: "Strengthen H1 Tag", description: "Ensure you have a clear, descriptive H1 tag.", priority: "high" },
+      { title: "Add More H2 Headings", description: "Add at least 3-5 H2 headings.", priority: "medium" },
+      { title: "Improve Image ALT Tags", description: "Add descriptive ALT text to all images.", priority: "medium" },
+      { title: "Add Sitemap.xml", description: "Create and submit a sitemap.xml file.", priority: "medium" },
+      { title: "Add Internal Links", description: "Add more internal links between related pages.", priority: "medium" },
+      { title: "Optimize Page Title", description: "Ensure your page title is 50-60 characters.", priority: "low" },
+      { title: "Add Open Graph Tags", description: "Add Open Graph meta tags.", priority: "low" },
+      { title: "Improve About Page", description: "Create or enhance your About page.", priority: "low" }
+    ]
   };
 }
