@@ -52,8 +52,20 @@ export async function GET(req: Request) {
 
     // 1. Run Full Analysis (Deep Scan) - same logic as webhook
     const domainUrl = domain.startsWith('http') ? domain : `https://${domain}`;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    // Construct the full URL for the internal API call
+    // In production (Vercel), use VERCEL_URL or production URL (never localhost)
+    // In local development, use localhost
+    let baseUrl: string;
+    if (process.env.VERCEL_URL) {
+      // Production: use Vercel URL
+      baseUrl = `https://${process.env.VERCEL_URL}`;
+    } else if (process.env.NEXT_PUBLIC_BASE_URL && !process.env.NEXT_PUBLIC_BASE_URL.includes('localhost')) {
+      // Production: use explicit production URL (if set and not localhost)
+      baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    } else {
+      // Local development: use localhost
+      baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    }
     const scrapeUrl = `${baseUrl}/api/scrape?url=${encodeURIComponent(domainUrl)}`;
     
     let scrapeRes;
